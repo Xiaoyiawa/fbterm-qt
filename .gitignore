@@ -1,0 +1,23 @@
+# build outputs
+build/
+bin/
+assets/
+*.log
+
+# temporary/debug
+.dev/
+include/
+lib/
+
+# vendor sources: each is its own git repository
+/lvgl/
+/libvterm/
+/freetype/
+/unifont-18.0.01.tar.gz
+
+# Qt build artifacts if built in-tree
+qt/.qmake.stash
+qt/Makefile
+qt/*.o
+qt/moc_*
+qt/lvfbterm-qt
