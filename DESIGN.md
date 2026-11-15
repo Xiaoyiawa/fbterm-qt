@@ -86,7 +86,25 @@ QTermWidget 负责：
 - 因为焦点在 QTermWidget 内部 `TerminalDisplay`，快捷键放在
   `QApplication::installEventFilter` 而不是父类 `keyPressEvent`
 
-## 4. 构建与部署
+## 4. systemd 开机自启
+
+`systemd/lvfbterm.service`：
+
+- `WorkingDirectory=/root/lvfbterm`
+- `ExecStart=/root/lvfbterm/bin/lvfbterm`
+- `Environment=QT_QPA_PLATFORM=linuxfb`
+- `Environment=QT_QPA_GENERIC_PLUGINS=none`（不加载 Qt 自带 evdev 插件）
+- `Environment=QT_QPA_ENABLE_TERMINAL_KEYBOARD=0`
+- `RuntimeDirectory=lvfbterm` + `XDG_RUNTIME_DIR=/run/lvfbterm`
+- `Conflicts=getty@tty1.service`
+- `Restart=on-failure`（`Ctrl+Alt+Q` 正常退出不重启）
+- `KillSignal=SIGTERM`，`TimeoutStopSec=5`
+
+`qt/signalbridge.*` 把 `SIGTERM/SIGINT/SIGHUP` 通过 pipe + `QSocketNotifier`
+转成 Qt 退出事件，保证 `ConsoleMode` 析构时恢复 `KDTEXT`。
+`scripts/install-service.sh` 负责安装 unit、禁用 getty@tty1、enable + start。
+
+## 5. 构建与部署
 
 - 目标机原生构建：`qt/build.sh`（qmake + make）
 - 依赖：`g++ qtbase5-dev qtbase5-dev-tools libqtermwidget5-0-dev`

@@ -9,6 +9,7 @@
 #include "consolemode.h"
 #include "evdevinput.h"
 #include "options.h"
+#include "signalbridge.h"
 #include "terminalwindow.h"
 
 int main(int argc, char** argv)
@@ -23,7 +24,7 @@ int main(int argc, char** argv)
     if (options.help) { printQtUsage(); return 0; }
 
     qputenv("QT_QPA_PLATFORM", "linuxfb");
-    qputenv("QT_QPA_GENERIC_PLUGINS", "");
+    qputenv("QT_QPA_GENERIC_PLUGINS", "none");
     // Do not consume the SSH/console stdin as a keyboard. The terminal on the
     // TV must be driven by the physical USB keyboard via evdev.
     qputenv("QT_QPA_ENABLE_TERMINAL_KEYBOARD", "0");
@@ -33,6 +34,7 @@ int main(int argc, char** argv)
     consoleMode.enterGraphics();
 
     QApplication app(argc, argv);
+    SignalBridge signalBridge;
 
     const QString fontPath = resolveFontPath(options.fontPath);
     QString family = QApplication::font().family();

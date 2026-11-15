@@ -11,7 +11,7 @@ ARCHFLAGS       ?= -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=
 OPT             ?= -O2 -g
 BUILD           := build
 
-.PHONY: all qt qt-clean probe uinput deploy clean distclean
+.PHONY: all qt qt-clean probe uinput deploy install-service clean distclean
 
 all: probe uinput
 	@echo "Qt app: build on the target with 'cd qt && ./build.sh'"
@@ -41,6 +41,9 @@ uinput: $(BUILD)/uinput_type
 
 deploy:
 	./scripts/deploy.sh
+
+install-service:
+	./scripts/install-service.sh
 
 clean: qt-clean
 	rm -rf $(BUILD)

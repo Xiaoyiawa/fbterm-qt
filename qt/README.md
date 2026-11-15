@@ -42,6 +42,20 @@ cd /root/lvfbterm
 - `Ctrl+Alt+Q` 退出
 - `Ctrl+滚轮` 字号 ±2px
 
+## 开机自启动
+
+仓库根目录的 systemd unit 和安装脚本：
+
+```sh
+cd /root/lvfbterm
+./scripts/install-service.sh
+systemctl status lvfbterm.service
+journalctl -u lvfbterm.service -f
+```
+
+`install-service.sh` 会禁用 `getty@tty1`，避免和 framebuffer 终端抢 VT。
+`Ctrl+Alt+Q` 正常退出后服务不自动重启（`Restart=on-failure`）。
+
 ## 输入热插拔
 
 - 无键盘：每 **500ms** 扫描 `/dev/input/event*`；找到后停止

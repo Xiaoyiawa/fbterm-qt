@@ -1,9 +1,11 @@
 # lvfbterm
 
 在 Linux 帧缓冲 `/dev/fb0` 上运行的本地伪终端。
+其实只是为自己的机顶盒写的
+因为我不想每次都要ssh进去才能操作...
+纯vibe coding，勿喷QAQ
 
-当前版本基于 **Qt 5 + QTermWidget**，使用 Qt 的 `linuxfb` 平台插件直接输出到
-Hi3798MV100（hifb，1920×1080/32bpp）的 HDMI 画面。
+基于 **Qt 5 + QTermWidget**，使用 Qt 的 `linuxfb` 平台插件直接输出到帧缓冲设备
 
 - 显示：Qt5 `linuxfb` → `/dev/fb0`
 - 终端：QTermWidget（VT 解析、PTY、滚动、选区、鼠标上报）
@@ -11,16 +13,6 @@ Hi3798MV100（hifb，1920×1080/32bpp）的 HDMI 画面。
 - 输入：自管 evdev，`QSocketNotifier` + `EVIOCGRAB`，支持热插拔
 - 会话：`/bin/login`（默认），注销自动重开
 - 语言：C++11，qmake 构建
-
-![Qt 终端截图](docs/qt-screenshot.png)
-
-## 目标设备
-
-`root@192.168.1.15`：
-
-- Hi3798MV100 / armv7l / Ubuntu 20.04 armhf
-- `/dev/fb0`：`hifb`，1920×1080，32bpp
-- Qt 5.12.8 + QTermWidget 0.14.1（已安装）
 
 ## 目录
 
@@ -34,7 +26,6 @@ Hi3798MV100（hifb，1920×1080/32bpp）的 HDMI 画面。
 │   └── lvfbterm-qt.pro
 ├── scripts/deploy.sh       复制源码到设备并在设备上构建
 ├── tools/                  fb_probe / uinput_type / fb_ffmpeg_bridge
-├── docs/                   实机截图
 ├── assets/                 make 时解出的 unifont.otf（git 忽略）
 └── bin/                    lvfbterm（git 忽略）
 ```
@@ -93,6 +84,40 @@ cd /root/lvfbterm
 - `Ctrl+Alt+Q` 退出，恢复文本控制台
 - `Ctrl+滚轮` 字号 ±2px
 
+## 开机自启动
+
+设备上已安装 systemd 服务：
+
+```sh
+systemctl enable lvfbterm.service
+systemctl start lvfbterm.service
+```
+
+仓库里的安装脚本（会禁用 `getty@tty1`，避免和 framebuffer 终端抢 VT）：
+
+```sh
+cd /root/lvfbterm
+./scripts/install-service.sh
+```
+
+查看：
+
+```sh
+systemctl status lvfbterm.service
+journalctl -u lvfbterm.service -f
+```
+
+停止/禁用：
+
+```sh
+systemctl stop lvfbterm.service
+systemctl disable --now lvfbterm.service
+```
+
+`Ctrl+Alt+Q` 正常退出后服务不会自动重启（`Restart=on-failure`）；
+需要继续运行用 `systemctl start lvfbterm.service`。如果希望退出后也自动拉起，
+把 `Restart=on-failure` 改成 `Restart=always`。
+
 ## 输入热插拔
 
 输入层不依赖 Qt 的 evdev 通用插件，而是自己读 `/dev/input/event*`：
@@ -105,10 +130,6 @@ cd /root/lvfbterm
 - 按键合成 `QKeyEvent` 发给 `TerminalDisplay`
 - 滚轮合成 `QWheelEvent`
 
-`Backspace` 使用 QTermWidget 的 `linux.keytab`，发送 `0x7f`（DEL），不会出现 `^H`。
-
-已验证：程序先无键盘启动，2 秒后插入 uinput 键盘，500ms 内自动接管；
-输入 `abc` + Backspace + `d` 显示 `abd`，见 [docs/qt-input-test.png](docs/qt-input-test.png)。
 
 ## 显示
 
@@ -119,10 +140,7 @@ cd /root/lvfbterm
 
 ## 已知限制
 
-- QTermWidget 使用自带 VT 解析，**不再使用 libvterm**。
-  工作区里的 `freetype/` 是旧 LVGL 版遗留源码，Qt 版不链接。
 - QTermWidget 会提示 Unifont 是 variable-width（dual-width 的正常现象），
   实测登录/MOTD/中文对齐正常。
-- `Ctrl+滚轮` 缩放优先于程序鼠标上报（QTermWidget 未暴露终端 mouse mode）。
 - 暂不支持中文输入法、复制粘贴、systemd 自启。
 - 鼠标热插拔逻辑已实现；当前设备没有鼠标，滚轮/缩放尚未实机验证。
