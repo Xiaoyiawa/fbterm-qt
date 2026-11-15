@@ -3,6 +3,7 @@
 
 #include <qtermwidget.h>
 class QLabel;
+class QTimer;
 
 #include "ime.h"
 #include "options.h"
@@ -33,10 +34,13 @@ private:
     void applyFont();
     void layoutImeLabel();
     void updateImeLabel();
+    void showImeToast(const QString& text);
 
     QtOptions options_;
     PinyinIme ime_;
     QLabel* imeLabel_ = nullptr;
+    QLabel* toastLabel_ = nullptr;
+    QTimer* toastTimer_ = nullptr;
     QString fontFamily_;
     int fontSize_ = 32;
 };

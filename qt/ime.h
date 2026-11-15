@@ -30,10 +30,13 @@ private:
     bool select(int index, QString* commit);
     QString currentResult() const;
     QString currentCommit() const;
+    QString segments() const;
+    bool hasComposition() const;
 
     pinyin_ime_t* engine_ = nullptr;
     QString buffer_;
     bool chinese_ = true;
+    int page_ = 0;
 };
 
 #endif

@@ -95,6 +95,7 @@ void PinyinIme::toggleMode()
 void PinyinIme::update()
 {
     if (engine_ == nullptr) return;
+    page_ = 0;
     if (buffer_.isEmpty()) {
         pinyin_ime_input(engine_, "");
     } else {
@@ -105,6 +106,7 @@ void PinyinIme::update()
 void PinyinIme::reset()
 {
     buffer_.clear();
+    page_ = 0;
     if (engine_ != nullptr) pinyin_ime_input(engine_, "");
 }
 
@@ -115,10 +117,26 @@ QString PinyinIme::currentResult() const
     return result != nullptr ? QString::fromUtf8(result) : QString();
 }
 
+QString PinyinIme::segments() const
+{
+    if (engine_ == nullptr) return QString();
+    const char* seg = pinyin_ime_get_segments(engine_);
+    return seg != nullptr ? QString::fromUtf8(seg) : QString();
+}
+
+bool PinyinIme::hasComposition() const
+{
+    return !buffer_.isEmpty() || !currentResult().isEmpty() || !segments().isEmpty();
+}
+
 QString PinyinIme::currentCommit() const
 {
-    const QString result = currentResult();
-    return result.isEmpty() ? buffer_ : result;
+    QString text = currentResult();
+    QString rest = segments();
+    rest.remove(QLatin1Char('\''));
+    text += rest;
+    if (text.isEmpty()) text = buffer_;
+    return text;
 }
 
 bool PinyinIme::select(int index, QString* commit)
@@ -129,10 +147,15 @@ bool PinyinIme::select(int index, QString* commit)
     if (pinyin_ime_select(engine_, static_cast<unsigned int>(index)) != PINYIN_IME_OK) {
         return false;
     }
-    // Commit the whole result even if more segments remain; this is a
-    // terminal, not a full editor, and keeps the state predictable.
-    *commit = currentResult();
-    reset();
+    buffer_.clear();
+    page_ = 0;
+    if (pinyin_ime_is_finished(engine_)) {
+        *commit = currentResult();
+        reset();
+    }
+    // Otherwise keep the engine state: get_segments() now returns the
+    // remaining syllables (e.g. after selecting 真 from zhen'de'ma it is
+    // de'ma) and candidates are regenerated for that remainder.
     return true;
 }
 
@@ -145,34 +168,53 @@ bool PinyinIme::handleKey(int key, Qt::KeyboardModifiers mods,
     }
 
     if (key == Qt::Key_Backspace) {
-        if (buffer_.isEmpty()) return false;
-        buffer_.chop(1);
-        update();
-        return true;
+        if (!buffer_.isEmpty()) {
+            buffer_.chop(1);
+            update();
+            return true;
+        }
+        if (hasComposition()) {
+            reset();
+            return true;
+        }
+        return false;
     }
     if (key == Qt::Key_Escape) {
-        if (buffer_.isEmpty()) return false;
+        if (!hasComposition()) return false;
         reset();
         return true;
     }
     if (key == Qt::Key_Return || key == Qt::Key_Enter) {
-        if (buffer_.isEmpty()) return false;
-        *commit = buffer_;
+        if (!hasComposition()) return false;
+        *commit = currentCommit();
         reset();
         return true;
     }
+    if (key == Qt::Key_PageDown || key == Qt::Key_PageUp) {
+        if (!hasComposition()) return false;
+        const int count = pinyin_ime_get_candidate_count(engine_);
+        const int pages = (count + 8) / 9;
+        if (pages <= 0) return true;
+        if (key == Qt::Key_PageDown) {
+            if (page_ + 1 < pages) ++page_;
+        } else if (page_ > 0) {
+            --page_;
+        }
+        return true;
+    }
     if (key == Qt::Key_Space) {
-        if (buffer_.isEmpty()) return false;
-        if (pinyin_ime_get_candidate_count(engine_) > 0) {
-            select(0, commit);
+        if (!hasComposition()) return false;
+        const int count = pinyin_ime_get_candidate_count(engine_);
+        if (count > 0) {
+            select(std::min(page_ * 9, count - 1), commit);
         } else {
-            *commit = buffer_;
+            *commit = currentCommit();
             reset();
         }
         return true;
     }
-    if (key >= Qt::Key_1 && key <= Qt::Key_9 && !buffer_.isEmpty()) {
-        const int index = key - Qt::Key_1;
+    if (key >= Qt::Key_1 && key <= Qt::Key_9 && hasComposition()) {
+        const int index = page_ * 9 + (key - Qt::Key_1);
         if (pinyin_ime_get_candidate_count(engine_) > index) {
             select(index, commit);
         }
@@ -180,6 +222,10 @@ bool PinyinIme::handleKey(int key, Qt::KeyboardModifiers mods,
     }
 
     if (key >= Qt::Key_A && key <= Qt::Key_Z) {
+        // If a segment has already been selected, keep the engine state and
+        // do not feed the letter into pinyin_ime_input() (that would reset
+        // the selected result). Select the remaining segments first.
+        if (hasComposition() && buffer_.isEmpty()) return true;
         if (buffer_.isEmpty() && !chinese_) return false;
         buffer_ += QChar('a' + (key - Qt::Key_A));
         update();
@@ -197,7 +243,7 @@ bool PinyinIme::handleKey(int key, Qt::KeyboardModifiers mods,
 
     if (isPunctuation(c)) {
         if (!chinese_) return false;
-        if (!buffer_.isEmpty()) {
+        if (hasComposition()) {
             *commit = currentCommit();
             reset();
         }
@@ -207,24 +253,38 @@ bool PinyinIme::handleKey(int key, Qt::KeyboardModifiers mods,
 
     // While composing, swallow navigation/editing keys instead of letting
     // QTermWidget move the cursor under the overlay.
-    if (!buffer_.isEmpty()) return true;
+    if (hasComposition()) return true;
     return false;
 }
 
 QString PinyinIme::display() const
 {
-    if (engine_ == nullptr || buffer_.isEmpty()) return QString();
-    QString out = buffer_;
+    if (engine_ == nullptr || !hasComposition()) return QString();
+
+    const QString result = currentResult();
+    const QString segs = segments();
+    QString out;
+    if (!result.isEmpty()) out = result + QStringLiteral("  ");
+    if (!segs.isEmpty()) out += segs;
+    else if (!buffer_.isEmpty()) out += buffer_;
+    if (out.isEmpty()) out = buffer_;
+
     const int count = pinyin_ime_get_candidate_count(engine_);
     if (count <= 0) {
         out += QStringLiteral("  (无候选)");
         return out;
     }
-    const int shown = std::min(count, 9);
-    for (int i = 0; i < shown; ++i) {
+    const int pages = (count + 8) / 9;
+    int page = page_;
+    if (page >= pages) page = pages - 1;
+    if (page < 0) page = 0;
+    out += QStringLiteral("  [%1/%2]").arg(page + 1).arg(pages);
+    const int begin = page * 9;
+    const int end = std::min(count, begin + 9);
+    for (int i = begin; i < end; ++i) {
         const char* cand = pinyin_ime_get_candidate(engine_, static_cast<unsigned int>(i));
         if (cand == nullptr) continue;
-        out += QStringLiteral("  %1.%2").arg(i + 1).arg(QString::fromUtf8(cand));
+        out += QStringLiteral("  %1.%2").arg(i - begin + 1).arg(QString::fromUtf8(cand));
     }
     return out;
 }

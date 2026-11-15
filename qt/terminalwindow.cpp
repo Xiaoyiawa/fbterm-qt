@@ -9,6 +9,7 @@
 #include <QApplication>
 #include <QLabel>
 #include <QResizeEvent>
+#include <QTimer>
 
 TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFamily,
                                QWidget* parent)
@@ -70,6 +71,22 @@ TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFami
     imeFont.setPixelSize(22);
     imeLabel_->setFont(imeFont);
     imeLabel_->hide();
+
+    toastLabel_ = new QLabel(this);
+    toastLabel_->setAttribute(Qt::WA_TransparentForMouseEvents);
+    toastLabel_->setStyleSheet(
+        "QLabel { background-color: rgba(20,20,20,230); color: #CCCCCC;"
+        " border: 1px solid #3A96DD; border-radius: 6px; padding: 5px 14px; }");
+    QFont toastFont = font();
+    toastFont.setPixelSize(28);
+    toastFont.setBold(true);
+    toastLabel_->setFont(toastFont);
+    toastLabel_->hide();
+
+    toastTimer_ = new QTimer(this);
+    toastTimer_->setSingleShot(true);
+    toastTimer_->setInterval(1200);
+    connect(toastTimer_, &QTimer::timeout, toastLabel_, &QWidget::hide);
 
     connect(this, &QTermWidget::finished, this, &TerminalWindow::onFinished);
     qApp->installEventFilter(this);
@@ -169,6 +186,20 @@ void TerminalWindow::toggleImeMode()
     if (!ime_.enabled()) return;
     ime_.toggleMode();
     updateImeLabel();
+    showImeToast(ime_.chineseMode() ? QStringLiteral("中") : QStringLiteral("EN"));
+}
+
+void TerminalWindow::showImeToast(const QString& text)
+{
+    if (toastLabel_ == nullptr) return;
+    toastLabel_->setText(text);
+    toastLabel_->adjustSize();
+    const int x = width() - toastLabel_->width() - 24;
+    const int y = height() - toastLabel_->height() - 24;
+    toastLabel_->move(x, y);
+    toastLabel_->show();
+    toastLabel_->raise();
+    toastTimer_->start();
 }
 
 void TerminalWindow::layoutImeLabel()
@@ -198,4 +229,8 @@ void TerminalWindow::resizeEvent(QResizeEvent* event)
 {
     QTermWidget::resizeEvent(event);
     layoutImeLabel();
+    if (toastLabel_ != nullptr && toastLabel_->isVisible()) {
+        toastLabel_->move(width() - toastLabel_->width() - 24,
+                          height() - toastLabel_->height() - 24);
+    }
 }

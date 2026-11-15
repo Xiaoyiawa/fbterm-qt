@@ -59,9 +59,11 @@ LVGL 版在 hifb 上遇到 mmap 区域不是实际扫描输出的问题：
 - 鼠标 10s 定时扫描
 - 每个 fd 一个 `QSocketNotifier(Read)`
 - `EVIOCGRAB` 独占；拔掉时 read 返回 `ENODEV`，移除并恢复扫描定时器
-- 中文输入法：`qt/ime.*` 包 libpinyinime；字母先入 IME，空格/数字选词，
-  Shift 单击切换中英，中文模式标点转全角；候选条是 QTermWidget 上的浮层，
-  不画中英图标
+- 中文输入法：`qt/ime.*` 包 libpinyinime；字母先入 IME，空格/数字选词；
+  选词后用 `pinyin_ime_get_segments()` 保留剩余音节（`zhendema` → `zhen'de'ma`，
+  选“真”后剩 `de'ma`），不重置已选结果；候选每页 9 个，PageUp/PageDown 翻页
+- Shift 单击切换中英，右下角 1.2 秒 toast 显示“中”/“EN”，不画常驻图标；
+  中文模式标点转全角
 - 按键映射：
   - US QWERTY；Shift/Ctrl/Alt/Caps
   - 字母、数字、符号、方向键、F1-F12、Home/End/PgUp/PgDn、Insert/Delete

@@ -126,13 +126,16 @@ systemctl disable --now fbterm-qt.service
 默认启用，使用 `share/pinyin.txt` 和 `share/dictionary.data`，不需要额外服务。
 
 - `Shift` 单击：切换中文/英文（不显示中英图标）
-- 中文模式字母：输入拼音，底部临时显示拼音和候选词
-- `空格`：选第 1 个候选
-- `1`-`9`：选对应候选
+- 中文模式字母：输入拼音，库自动分音节，例如 `zhendema` → `zhen'de'ma`
+- 选“真”后剩余 `de'ma` 会继续显示/参与候选，不会丢掉已选的字
+- `空格`：选当前页第 1 个候选
+- `1`-`9`：选当前页对应候选
+- `PageUp` / `PageDown`：候选翻页（“真”常在后面几页）
 - `Backspace`：删除一个拼音字母
 - `Esc`：清空当前拼音
 - `Enter`：把当前拼音原样提交
 - 中文模式标点：自动转全角（`，。？！：；（）【】《》` 等）
+- 切换中英时，右下角短暂弹出 `中` / `EN`（1.2 秒，不常驻图标）
 - 关闭：`--disable-ime`，或 `systemctl edit fbterm-qt.service` 加 `ExecStart` 参数
 
 ## 输入热插拔
