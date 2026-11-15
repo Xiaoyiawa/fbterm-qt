@@ -14,23 +14,36 @@
 - 输入：自管 evdev，`QSocketNotifier` + `EVIOCGRAB`，支持热插拔
 - 中文输入：内置 libpinyinime，Shift 切换中英，空格/数字选词，全角标点
 - 会话：`/bin/login`（默认）；登录 shell 里 `exit` 或注销后**直接退出程序**
-- 语言：C++11，qmake 构建
+- 语言：C++17，qmake 构建
 
 ## 目录
 
-```
+```text
 .
-├── qt/                     Qt/QTermWidget 主程序
-│   ├── main.cpp            linuxfb、字体、启动 QT
-│   ├── terminalwindow.*    QTermWidget 窗口/字体/快捷键
-│   ├── evdevinput.*        键盘/鼠标热插拔输入
-│   ├── consolemode.*       KD_GRAPHICS / KD_TEXT
+├── qt/                       Qt/QTermWidget 主程序
+│   ├── main.cpp              linuxfb、字体、启动
+│   ├── terminalwindow.*      窗口、字体、快捷键、候选浮层、toast
+│   ├── ime.*                 libpinyinime 状态机、全角标点
+│   ├── evdevinput.*          键盘/鼠标热插拔输入
+│   ├── consolemode.*         KD_GRAPHICS / KD_TEXT
+│   ├── signalbridge.*        SIGTERM → Qt quit
+│   ├── vendor/pinyinime/     内置拼音引擎源码
 │   └── fbterm-qt.pro
-├── scripts/deploy.sh       复制源码到设备并在设备上构建
-├── tools/                  fb_probe / uinput_type / fb_ffmpeg_bridge
-├── assets/                 make 时解出的 unifont.otf（git 忽略）
-└── bin/                    fbterm-qt（git 忽略）
+├── share/
+│   ├── color-schemes/        Campbell.colorscheme
+│   ├── keytab/               fbterm-qt.keytab
+│   ├── pinyin.txt            拼音表
+│   └── dictionary.data       词典
+├── systemd/fbterm-qt.service
+├── scripts/                  deploy.sh / install-service.sh
+├── tools/                    fb_probe / uinput_type / fb_ffmpeg_bridge
+├── docs/                     实机截图
+├── GUIDE.md                  使用、调优、移植
+├── DESIGN.md                 设计说明
+└── Makefile
 ```
+
+运行时生成/部署产物 `bin/`、`build/` 不提交。
 
 ## 依赖
 
@@ -41,7 +54,8 @@ apt-get install -y g++ qtbase5-dev qtbase5-dev-tools \
     libqtermwidget5-0-dev libutf8proc-dev
 ```
 
-`unifont.otf` 需要放到 `share/unifont.otf`，或者用 `--font-path` 指定。
+默认字体只找 `share/font.ttf` 或 `share/font.otf`；把带中文的字体放进去，
+或者用 `--font-path` 指定。
 
 ## 构建
 

@@ -149,7 +149,11 @@ bool PinyinIme::select(int index, QString* commit)
     }
     buffer_.clear();
     page_ = 0;
-    if (pinyin_ime_is_finished(engine_)) {
+    // A candidate can consume the last segment while the library still
+    // reports is_finished() == false; in that case there is nothing left to
+    // show, so commit and leave the IME automatically.
+    if (pinyin_ime_is_finished(engine_) ||
+        pinyin_ime_get_candidate_count(engine_) <= 0) {
         *commit = currentResult();
         reset();
     }

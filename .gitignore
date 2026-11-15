@@ -1,17 +1,12 @@
 # build outputs
 build/
 bin/
-assets/
 *.log
 
 # temporary/debug
 .dev/
 /include/
-lib/
-
-# vendor sources kept outside the Qt app build
-/freetype/
-/unifont-18.0.01.tar.gz
+/lib/
 
 # Qt build artifacts if built in-tree
 qt/.qmake.stash
@@ -19,11 +14,3 @@ qt/Makefile
 qt/*.o
 qt/moc_*
 qt/fbterm-qt
-
-# editor temp files
-*.swp
-*.swo
-*~
-
-# libpinyinime is vendored into qt/vendor/pinyinime/
-/libpinyinime/

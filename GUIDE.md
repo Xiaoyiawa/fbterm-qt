@@ -125,7 +125,7 @@ COLORTERM=truecolor
 ### 2.1 字体
 
 ```sh
-./bin/fbterm-qt --font-size=40 --font-path=share/unifont.otf
+./bin/fbterm-qt --font-size=40 --font-path=share/font.ttf
 ```
 
 - 字号默认 32，整数像素
@@ -393,6 +393,5 @@ share/color-schemes/Campbell.colorscheme
 share/keytab/fbterm-qt.keytab
 share/pinyin.txt
 share/dictionary.data
-share/unifont.otf
 docs/*.png
 ```

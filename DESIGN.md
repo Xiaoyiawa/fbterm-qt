@@ -91,7 +91,7 @@ QTermWidget 负责：
 ### 3.5 字体
 
 - 默认字体只找 `font.ttf` / `font.otf`（当前目录、`share/`、安装目录）；
-  找不到使用 Qt 默认字体，`unifont.otf` 需显式 `--font-path`
+  找不到使用 Qt 默认字体，其它字体需显式 `--font-path`
 - `QFontDatabase::addApplicationFont(...)`
 - `QFont` pixel size 可配（默认 32）；16 的倍数关闭抗锯齿，其余开启
 - QTermWidget 会提示 Unifont 是 variable-width（dual-width 正常现象），不影响实测对齐
