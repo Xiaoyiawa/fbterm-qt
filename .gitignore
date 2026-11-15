@@ -18,7 +18,7 @@ qt/.qmake.stash
 qt/Makefile
 qt/*.o
 qt/moc_*
-qt/lvfbterm-qt
+qt/qt_fbterm
 
 # editor temp files
 *.swp

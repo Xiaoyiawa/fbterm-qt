@@ -1,4 +1,4 @@
-# lvfbterm 设计文档（Qt 版）
+# qt_fbterm 设计文档（Qt 版）
 
 > Qt5 + QTermWidget，直接使用 `/dev/fb0` 的本地伪终端。
 > 目标机：Hi3798MV100 / armv7l / Ubuntu 20.04 / hifb 1920×1080。
@@ -64,7 +64,7 @@ LVGL 版在 hifb 上遇到 mmap 区域不是实际扫描输出的问题：
   - 字母、数字、符号、方向键、F1-F12、Home/End/PgUp/PgDn、Insert/Delete
   - 合成 `QKeyEvent` 发给当前焦点控件（`Konsole::TerminalDisplay`）
 - 滚轮合成 `QWheelEvent`，交给 QTermWidget 做回滚/程序鼠标上报
-- Backspace 使用自定义 `share/keytab/lvfbterm.keytab` → `0x7f`
+- Backspace 使用自定义 `share/keytab/qt_fbterm.keytab` → `0x7f`
 - F1-F12 使用 xterm 序列（`linux.keytab` 的 F1-F5 是 `ESC[[A..E`，不兼容
   `TERM=xterm-256color`，会导致 F2 尾部 `B` 被当字符）
 
@@ -97,14 +97,14 @@ QTermWidget 负责：
 
 ## 4. systemd 开机自启
 
-`systemd/lvfbterm.service`：
+`systemd/qt_fbterm.service`：
 
-- `WorkingDirectory=/root/lvfbterm`
-- `ExecStart=/root/lvfbterm/bin/lvfbterm`
+- `WorkingDirectory=/root/qt_fbterm`
+- `ExecStart=/root/qt_fbterm/bin/qt_fbterm`
 - `Environment=QT_QPA_PLATFORM=linuxfb`
 - `Environment=QT_QPA_GENERIC_PLUGINS=none`（不加载 Qt 自带 evdev 插件）
 - `Environment=QT_QPA_ENABLE_TERMINAL_KEYBOARD=0`
-- `RuntimeDirectory=lvfbterm` + `XDG_RUNTIME_DIR=/run/lvfbterm`
+- `RuntimeDirectory=qt_fbterm` + `XDG_RUNTIME_DIR=/run/qt_fbterm`
 - `Conflicts=getty@tty1.service`
 - `Restart=on-failure`（`Ctrl+Alt+Q` 正常退出不重启）
 - `KillSignal=SIGTERM`，`TimeoutStopSec=5`
@@ -118,7 +118,7 @@ QTermWidget 负责：
 - 目标机原生构建：`qt/build.sh`（qmake + make）
 - 依赖：`g++ qtbase5-dev qtbase5-dev-tools libqtermwidget5-0-dev`
 - 主机：`scripts/deploy.sh` 把 `qt/` 打包到设备并在设备上构建
-- 产物：`/root/lvfbterm/bin/lvfbterm`
+- 产物：`/root/qt_fbterm/bin/qt_fbterm`
 
 ## 5. 目录
 

@@ -1,4 +1,4 @@
-# lvfbterm-qt
+# qt_fbterm
 
 Qt 5 / QTermWidget 版终端，使用 Qt 的 `linuxfb` 平台插件直接输出 `/dev/fb0`。
 在目标机上原生编译（Qt 5.12.8 armhf）。
@@ -17,13 +17,13 @@ cd qt
 ./build.sh
 ```
 
-产物：`../bin/lvfbterm`。
+产物：`../bin/qt_fbterm`。
 
 ## 运行
 
 ```sh
-cd /root/lvfbterm
-./bin/lvfbterm
+cd /root/qt_fbterm
+./bin/qt_fbterm
 ```
 
 参数：
@@ -47,10 +47,10 @@ cd /root/lvfbterm
 仓库根目录的 systemd unit 和安装脚本：
 
 ```sh
-cd /root/lvfbterm
+cd /root/qt_fbterm
 ./scripts/install-service.sh
-systemctl status lvfbterm.service
-journalctl -u lvfbterm.service -f
+systemctl status qt_fbterm.service
+journalctl -u qt_fbterm.service -f
 ```
 
 `install-service.sh` 会禁用 `getty@tty1`，避免和 framebuffer 终端抢 VT。
@@ -63,7 +63,7 @@ journalctl -u lvfbterm.service -f
 - 键盘拔掉：`read()` 返回 `ENODEV` → 关闭并重新进入 500ms 扫描
 - 所有设备 `EVIOCGRAB`，避免 tty1/fbcon 重复收键
 - 按键合成 `QKeyEvent` 给 `TerminalDisplay`
-- Backspace 走自定义 `share/keytab/lvfbterm.keytab`，发 `0x7f`，不会出现 `^H`
+- Backspace 走自定义 `share/keytab/qt_fbterm.keytab`，发 `0x7f`，不会出现 `^H`
 - F1-F12 使用 xterm 序列（F2=`ESC O Q`），不会再把 F2 的尾部 `B` 当字符
 
 ## 说明

@@ -26,10 +26,10 @@ TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFami
     // Use xterm F1-F12 sequences (the "linux" keytab sends ESC[[A..E for
     // F1-F5, which xterm-256color cannot parse and leaves a trailing 'B').
     // QTermWidget resolves keytab names under KB_LAYOUT_DIR; it does not
-    // accept a path, so build.sh installs lvfbterm.keytab there.
+    // accept a path, so build.sh installs qt_fbterm.keytab there.
     const QString systemKeytab =
-        QStringLiteral("/usr/share/qtermwidget5/kb-layouts/lvfbterm.keytab");
-    setKeyBindings(QFileInfo::exists(systemKeytab) ? QStringLiteral("lvfbterm")
+        QStringLiteral("/usr/share/qtermwidget5/kb-layouts/qt_fbterm.keytab");
+    setKeyBindings(QFileInfo::exists(systemKeytab) ? QStringLiteral("qt_fbterm")
                                                    : QStringLiteral("default"));
 
     // QTermWidget inherits the parent environment; make the terminal type
@@ -41,7 +41,7 @@ TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFami
 
     const QStringList schemes = {
         QStringLiteral("./share/color-schemes/Campbell.colorscheme"),
-        QStringLiteral("/root/lvfbterm/share/color-schemes/Campbell.colorscheme"),
+        QStringLiteral("/root/qt_fbterm/share/color-schemes/Campbell.colorscheme"),
         QStringLiteral("/usr/share/qtermwidget5/color-schemes/Campbell.colorscheme"),
     };
     QString scheme;

@@ -1,10 +1,10 @@
 /*
- * fb_probe: read-only-ish /dev/fb0 diagnostics for lvfbterm bring-up.
+ * fb_probe: read-only-ish /dev/fb0 diagnostics for qt_fbterm bring-up.
  *
  * It never changes the visible page: it only prints ioctl data, writes into
  * the second page when yres_virtual allows it, and issues FBIOPAN_DISPLAY with
  * the current yoffset (a no-op). Build it for the target and run it before
- * starting lvfbterm.
+ * starting qt_fbterm.
  */
 #include <errno.h>
 #include <fcntl.h>

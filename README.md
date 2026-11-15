@@ -1,4 +1,4 @@
-# lvfbterm
+# qt_fbterm
 
 在 Linux 帧缓冲 `/dev/fb0` 上运行的本地伪终端。
 其实只是为自己的机顶盒写的
@@ -24,11 +24,11 @@
 │   ├── terminalwindow.*    QTermWidget 窗口/字体/快捷键
 │   ├── evdevinput.*        键盘/鼠标热插拔输入
 │   ├── consolemode.*       KD_GRAPHICS / KD_TEXT
-│   └── lvfbterm-qt.pro
+│   └── qt_fbterm.pro
 ├── scripts/deploy.sh       复制源码到设备并在设备上构建
 ├── tools/                  fb_probe / uinput_type / fb_ffmpeg_bridge
 ├── assets/                 make 时解出的 unifont.otf（git 忽略）
-└── bin/                    lvfbterm（git 忽略）
+└── bin/                    qt_fbterm（git 忽略）
 ```
 
 ## 依赖
@@ -47,11 +47,11 @@ apt-get install -y g++ qtbase5-dev qtbase5-dev-tools \
 在目标机上原生构建：
 
 ```sh
-cd /root/lvfbterm/qt
+cd /root/qt_fbterm/qt
 ./build.sh
 ```
 
-产物：`../bin/lvfbterm`。
+产物：`../bin/qt_fbterm`。
 
 从主机部署并构建：
 
@@ -59,14 +59,14 @@ cd /root/lvfbterm/qt
 ./scripts/deploy.sh
 ```
 
-默认 `DEPLOY_HOST=root@192.168.1.15`、`DEPLOY_DIR=/root/lvfbterm`，
+默认 `DEPLOY_HOST=root@192.168.1.15`、`DEPLOY_DIR=/root/qt_fbterm`，
 可覆盖。
 
 ## 运行
 
 ```sh
-cd /root/lvfbterm
-./bin/lvfbterm
+cd /root/qt_fbterm
+./bin/qt_fbterm
 ```
 
 参数：
@@ -90,33 +90,33 @@ cd /root/lvfbterm
 设备上已安装 systemd 服务：
 
 ```sh
-systemctl enable lvfbterm.service
-systemctl start lvfbterm.service
+systemctl enable qt_fbterm.service
+systemctl start qt_fbterm.service
 ```
 
 仓库里的安装脚本（会禁用 `getty@tty1`，避免和 framebuffer 终端抢 VT）：
 
 ```sh
-cd /root/lvfbterm
+cd /root/qt_fbterm
 ./scripts/install-service.sh
 ```
 
 查看：
 
 ```sh
-systemctl status lvfbterm.service
-journalctl -u lvfbterm.service -f
+systemctl status qt_fbterm.service
+journalctl -u qt_fbterm.service -f
 ```
 
 停止/禁用：
 
 ```sh
-systemctl stop lvfbterm.service
-systemctl disable --now lvfbterm.service
+systemctl stop qt_fbterm.service
+systemctl disable --now qt_fbterm.service
 ```
 
 `Ctrl+Alt+Q` 正常退出后服务不会自动重启（`Restart=on-failure`）；
-需要继续运行用 `systemctl start lvfbterm.service`。如果希望退出后也自动拉起，
+需要继续运行用 `systemctl start qt_fbterm.service`。如果希望退出后也自动拉起，
 把 `Restart=on-failure` 改成 `Restart=always`。
 
 ## 输入热插拔

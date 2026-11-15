@@ -1,17 +1,17 @@
 #!/bin/sh
 #
 # Build the Qt version on the target over SSH (source is copied, compiled
-# there, then installed as /root/lvfbterm/bin/lvfbterm).
+# there, then installed as /root/qt_fbterm/bin/qt_fbterm).
 #
 # Usage:
-#   DEPLOY_HOST=root@192.168.1.15 DEPLOY_DIR=/root/lvfbterm ./scripts/deploy.sh
+#   DEPLOY_HOST=root@192.168.1.15 DEPLOY_DIR=/root/qt_fbterm ./scripts/deploy.sh
 #
 # The target needs: g++ qtbase5-dev qtbase5-dev-tools libqtermwidget5-0-dev
 
 set -eu
 ROOT=$(CDPATH= cd -- "$(dirname -- "$0")/.." && pwd)
 HOST=${DEPLOY_HOST:-root@192.168.1.15}
-DIR=${DEPLOY_DIR:-/root/lvfbterm}
+DIR=${DEPLOY_DIR:-/root/qt_fbterm}
 
 cd "$ROOT"
 
@@ -22,7 +22,7 @@ tar czf - qt share | ssh "$HOST" "
     cd '$DIR/qt'
     ./build.sh
     cd '$DIR'
-    ./bin/lvfbterm --help
+    ./bin/qt_fbterm --help
 "
 
 echo "== deployed to $HOST:$DIR"

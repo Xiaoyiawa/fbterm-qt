@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     QtOptions options;
     QString error;
     if (!parseQtOptions(argc, argv, &options, &error)) {
-        QTextStream(stderr) << "lvfbterm-qt: " << error << "\n";
+        QTextStream(stderr) << "qt_fbterm: " << error << "\n";
         printQtUsage();
         return 2;
     }

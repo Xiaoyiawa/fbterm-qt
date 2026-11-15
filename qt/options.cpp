@@ -44,8 +44,8 @@ QString resolveFontPath(const QString& explicitPath)
     const QStringList candidates = {
         QStringLiteral("./unifont.otf"),
         QStringLiteral("./share/unifont.otf"),
-        QStringLiteral("/root/lvfbterm/share/unifont.otf"),
-        QStringLiteral("/usr/local/share/lvfbterm/unifont.otf"),
+        QStringLiteral("/root/qt_fbterm/share/unifont.otf"),
+        QStringLiteral("/usr/local/share/qt_fbterm/unifont.otf"),
         QStringLiteral("/usr/share/fonts/opentype/unifont/unifont.otf"),
         QStringLiteral("/usr/share/fonts/truetype/unifont/unifont.otf"),
     };
@@ -92,7 +92,7 @@ bool parseQtOptions(int argc, char** argv, QtOptions* out, QString* error)
 void printQtUsage()
 {
     QTextStream(stdout)
-        << "Usage: lvfbterm-qt [options]\n"
+        << "Usage: qt_fbterm [options]\n"
         << "  --font-path=PATH      Unifont OTF path\n"
         << "  --font-size=N         pixel size 8..96 (default 32)\n"
         << "  --shell=CMD           PTY program (default /bin/login)\n"

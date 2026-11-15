@@ -1,10 +1,10 @@
-# lvfbterm — Qt5 / QTermWidget version
+# qt_fbterm — Qt5 / QTermWidget version
 #
 # The Qt application is built natively on the target because Qt/qtermwidget
 # dev packages are installed there. The host cross compiler is only used for
 # the small evdev/framebuffer test tools.
 
-TOOL            := lvfbterm
+TOOL            := qt_fbterm
 CROSS_COMPILE   ?= $(HOME)/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-
 CC              := $(CROSS_COMPILE)gcc
 ARCHFLAGS       ?= -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
@@ -22,11 +22,11 @@ qt:
 		cd qt && ./build.sh; \
 	else \
 		echo "qmake not found on this host."; \
-		echo "On the target: cd /root/lvfbterm/qt && ./build.sh"; \
+		echo "On the target: cd /root/qt_fbterm/qt && ./build.sh"; \
 	fi
 
 qt-clean:
-	cd qt && rm -f *.o moc_* Makefile .qmake.stash lvfbterm-qt
+	cd qt && rm -f *.o moc_* Makefile .qmake.stash qt_fbterm
 
 $(BUILD)/fb_probe: tools/fb_probe.c
 	@mkdir -p $(@D)
