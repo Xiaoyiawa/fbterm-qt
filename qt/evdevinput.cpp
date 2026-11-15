@@ -337,6 +337,8 @@ QWidget* EvdevInput::eventTarget() const
 
 void EvdevInput::sendKey(int key, Qt::KeyboardModifiers mods, const QString& text)
 {
+    if (imeFilter_ && imeFilter_(key, mods, text)) return;
+
     QWidget* target = eventTarget();
     if (target == nullptr) return;
 
@@ -349,18 +351,23 @@ void EvdevInput::processKey(int code, int value)
     switch (code) {
     case KEY_LEFTCTRL:
     case KEY_RIGHTCTRL:
-        if (value == 1) ctrl_ = true;
+        if (value == 1) { ctrl_ = true; shiftTapCandidate_ = false; }
         else if (value == 0) ctrl_ = false;
         return;
     case KEY_LEFTALT:
     case KEY_RIGHTALT:
-        if (value == 1) alt_ = true;
+        if (value == 1) { alt_ = true; shiftTapCandidate_ = false; }
         else if (value == 0) alt_ = false;
         return;
     case KEY_LEFTSHIFT:
     case KEY_RIGHTSHIFT:
-        if (value == 1) shift_ = true;
-        else if (value == 0) shift_ = false;
+        if (value == 1) {
+            if (!shift_) { shift_ = true; shiftTapCandidate_ = true; }
+        } else if (value == 0 && shift_) {
+            shift_ = false;
+            if (shiftTapCandidate_ && shiftTapHandler_) shiftTapHandler_();
+            shiftTapCandidate_ = false;
+        }
         return;
     case KEY_CAPSLOCK:
         if (value == 1) caps_ = !caps_;
@@ -374,6 +381,7 @@ void EvdevInput::processKey(int code, int value)
     }
 
     if (value == 0) return;
+    if (value == 1) shiftTapCandidate_ = false;
 
     int key = 0;
     QString text;

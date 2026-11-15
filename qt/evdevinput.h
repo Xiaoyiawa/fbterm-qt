@@ -7,6 +7,7 @@
 #include <QTimer>
 #include <QVector>
 #include <QWidget>
+#include <functional>
 #include <Qt>
 
 #include "options.h"
@@ -23,6 +24,10 @@ public:
     EvdevInput(QTermWidget* terminal, const QtOptions& options,
                QObject* parent = nullptr);
     ~EvdevInput();
+
+    using ImeKeyFilter = std::function<bool(int, Qt::KeyboardModifiers, const QString&)>;
+    void setImeKeyFilter(ImeKeyFilter filter) { imeFilter_ = std::move(filter); }
+    void setShiftTapHandler(std::function<void()> handler) { shiftTapHandler_ = std::move(handler); }
 
 private slots:
     void scanKeyboards();
@@ -59,6 +64,9 @@ private:
     bool alt_ = false;
     bool shift_ = false;
     bool caps_ = false;
+    bool shiftTapCandidate_ = false;
+    ImeKeyFilter imeFilter_;
+    std::function<void()> shiftTapHandler_;
 };
 
 #endif

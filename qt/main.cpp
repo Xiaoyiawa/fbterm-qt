@@ -52,5 +52,10 @@ int main(int argc, char** argv)
     QTimer::singleShot(0, &window, [&window]() { window.setFocus(); });
 
     EvdevInput input(&window, options);
+    input.setImeKeyFilter([&window](int key, Qt::KeyboardModifiers mods,
+                                    const QString& text) {
+        return window.handleImeKey(key, mods, text);
+    });
+    input.setShiftTapHandler([&window]() { window.toggleImeMode(); });
     return app.exec();
 }

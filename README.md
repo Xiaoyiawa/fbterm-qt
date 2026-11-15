@@ -12,6 +12,7 @@
 - 字体：默认只找 `font.ttf` / `font.otf`（Qt 底层 FreeType）；没有则用 Qt 默认字体
 - 配色：Windows Terminal **Campbell**（深色 `#0C0C0C`，非 Campbell PowerShell 蓝底）
 - 输入：自管 evdev，`QSocketNotifier` + `EVIOCGRAB`，支持热插拔
+- 中文输入：内置 libpinyinime，Shift 切换中英，空格/数字选词，全角标点
 - 会话：`/bin/login`（默认）；登录 shell 里 `exit` 或注销后**直接退出程序**
 - 语言：C++11，qmake 构建
 
@@ -78,6 +79,7 @@ cd /root/fbterm-qt
 --scrollback=N        默认 5000
 --keyboard=PATH       指定键盘（默认自动扫描）
 --mouse=PATH          指定鼠标（默认自动扫描）
+--disable-ime         关闭内置中文输入法
 ```
 
 快捷键：
@@ -118,6 +120,20 @@ systemctl disable --now fbterm-qt.service
 `Ctrl+Alt+Q` 正常退出后服务不会自动重启（`Restart=on-failure`）；
 需要继续运行用 `systemctl start fbterm-qt.service`。如果希望退出后也自动拉起，
 把 `Restart=on-failure` 改成 `Restart=always`。
+
+## 中文输入法
+
+默认启用，使用 `share/pinyin.txt` 和 `share/dictionary.data`，不需要额外服务。
+
+- `Shift` 单击：切换中文/英文（不显示中英图标）
+- 中文模式字母：输入拼音，底部临时显示拼音和候选词
+- `空格`：选第 1 个候选
+- `1`-`9`：选对应候选
+- `Backspace`：删除一个拼音字母
+- `Esc`：清空当前拼音
+- `Enter`：把当前拼音原样提交
+- 中文模式标点：自动转全角（`，。？！：；（）【】《》` 等）
+- 关闭：`--disable-ime`，或 `systemctl edit fbterm-qt.service` 加 `ExecStart` 参数
 
 ## 输入热插拔
 

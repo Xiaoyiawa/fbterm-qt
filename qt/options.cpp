@@ -64,6 +64,7 @@ bool parseQtOptions(int argc, char** argv, QtOptions* out, QString* error)
     for (int i = 1; i < argc; ++i) {
         QString arg = QString::fromLocal8Bit(argv[i]);
         if (arg == "--help" || arg == "-h") { out->help = true; continue; }
+        if (arg == "--disable-ime") { out->disableIme = true; continue; }
         if (!arg.startsWith("--")) {
             *error = QStringLiteral("unknown argument: ") + arg;
             return false;
@@ -102,5 +103,6 @@ void printQtUsage()
         << "  --shell=CMD           PTY program (default /bin/login)\n"
         << "  --scrollback=N        history lines (default 5000)\n"
         << "  --keyboard=PATH       evdev keyboard (default auto)\n"
-        << "  --mouse=PATH          evdev mouse (default auto)\n";
+        << "  --mouse=PATH          evdev mouse (default auto)\n"
+        << "  --disable-ime         disable the built-in pinyin IME\n";
 }

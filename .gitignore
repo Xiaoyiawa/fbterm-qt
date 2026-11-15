@@ -24,3 +24,6 @@ qt/fbterm-qt
 *.swp
 *.swo
 *~
+
+# libpinyinime is vendored into qt/vendor/pinyinime/
+/libpinyinime/

@@ -68,7 +68,44 @@ cd /root/fbterm-qt
 | `Backspace` | `0x7f`（DEL） |
 | shell 里 `exit` | 直接退出程序，不再重开 login |
 
-### 1.4 终端环境
+### 1.4 中文输入法
+
+默认启用 libpinyinime，数据在：
+
+```text
+share/pinyin.txt
+share/dictionary.data
+```
+
+操作：
+
+| 操作 | 行为 |
+|---|---|
+| `Shift` 单击 | 切换中文/英文（无中英图标） |
+| 字母 | 中文模式输入拼音，底部显示候选 |
+| `空格` | 选第 1 个候选 |
+| `1`-`9` | 选对应候选 |
+| `Backspace` | 删除一个拼音字母 |
+| `Esc` | 清空拼音 |
+| `Enter` | 原样提交拼音 |
+| 标点 | 中文模式自动全角 |
+
+关闭：
+
+```sh
+./bin/fbterm-qt --disable-ime
+```
+
+或改 systemd：
+
+```sh
+systemctl edit fbterm-qt.service
+# [Service]
+# ExecStart=
+# ExecStart=/root/fbterm-qt/bin/fbterm-qt --disable-ime
+```
+
+### 1.5 终端环境
 
 启动时强制：
 
@@ -179,7 +216,17 @@ ioctl(ttyFd_, KDSETMODE, KD_TEXT);      // 退出
 
 systemd 里禁用 `getty@tty1`，否则会抢 VT。不要同时保留两个 framebuffer 程序。
 
-### 2.7 systemd 环境
+### 2.7 输入法
+
+- 引擎源码在 `qt/vendor/pinyinime/`，已编进主程序，不需要额外 `.so`
+- 数据路径：`./share/pinyin.txt`、`./share/dictionary.data`；
+  安装目录 `/root/fbterm-qt/share/`
+- 换词库：替换这两个文件后重启服务
+- 拼音串/候选条样式在 `qt/terminalwindow.cpp` 的 `imeLabel_` 样式表
+- 全角标点表在 `qt/ime.cpp` 的 `fullWidth()`
+- 扫描频率/热插拔在 `qt/evdevinput.cpp`
+
+### 2.8 systemd 环境
 
 ```sh
 systemctl edit fbterm-qt.service
@@ -219,6 +266,8 @@ apt-get install -y g++ qtbase5-dev qtbase5-dev-tools \
 - fontconfig / FreeType（Qt 字体栈）
 - systemd（可选，但推荐）
 - evdev 输入设备 `/dev/input/event*`
+- 中文输入法数据：`share/pinyin.txt`、`share/dictionary.data`
+  （源码已 vendored 在 `qt/vendor/pinyinime/`）
 
 ### 3.2 帧缓冲
 
@@ -323,8 +372,10 @@ tput colors                                 # 256
 ```text
 qt/
 ├── main.cpp              linuxfb、字体、启动
-├── terminalwindow.*      QTermWidget、TERM、Campbell、快捷键
-├── evdevinput.*          500ms/10s 热插拔、QKeyEvent
+├── terminalwindow.*      QTermWidget、TERM、Campbell、候选浮层
+├── ime.*                 libpinyinime 状态机、全角标点
+├── vendor/pinyinime/     内置拼音引擎源码
+├── evdevinput.*          500ms/10s 热插拔、QKeyEvent、Shift 单击
 ├── consolemode.*         KD_GRAPHICS / KD_TEXT
 ├── signalbridge.*        SIGTERM → Qt quit
 ├── options.*             命令行
@@ -335,6 +386,8 @@ scripts/install-service.sh
 scripts/deploy.sh
 share/color-schemes/Campbell.colorscheme
 share/keytab/fbterm-qt.keytab
+share/pinyin.txt
+share/dictionary.data
 share/unifont.otf
 docs/*.png
 ```

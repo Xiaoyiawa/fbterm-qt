@@ -35,7 +35,11 @@ cd /root/fbterm-qt
 --scrollback=N        默认 5000
 --keyboard=PATH       指定键盘（默认自动扫描）
 --mouse=PATH          指定鼠标（默认自动扫描）
+--disable-ime         关闭内置中文输入法
 ```
+
+中文输入法默认启用，数据在 `share/pinyin.txt`、`share/dictionary.data`。
+`Shift` 单击切换中英；空格/数字选词；中文模式标点自动全角；不显示中英图标。
 
 快捷键：
 

@@ -12,6 +12,7 @@ struct QtOptions {
     QString keyboard;
     QString mouse;
     bool help = false;
+    bool disableIme = false;
 };
 
 bool parseQtOptions(int argc, char** argv, QtOptions* out, QString* error);

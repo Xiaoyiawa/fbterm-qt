@@ -7,6 +7,8 @@
 #include <QKeyEvent>
 #include <QWheelEvent>
 #include <QApplication>
+#include <QLabel>
+#include <QResizeEvent>
 
 TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFamily,
                                QWidget* parent)
@@ -56,6 +58,19 @@ TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFami
     setWorkingDirectory(QStringLiteral("/root"));
 
     applyFont();
+
+    if (!options_.disableIme) ime_.init();
+    imeLabel_ = new QLabel(this);
+    imeLabel_->setAttribute(Qt::WA_TransparentForMouseEvents);
+    imeLabel_->setWordWrap(true);
+    imeLabel_->setStyleSheet(
+        "QLabel { background-color: #0C0C0C; color: #CCCCCC;"
+        " border-top: 1px solid #3A96DD; padding: 4px 8px; }");
+    QFont imeFont = font();
+    imeFont.setPixelSize(22);
+    imeLabel_->setFont(imeFont);
+    imeLabel_->hide();
+
     connect(this, &QTermWidget::finished, this, &TerminalWindow::onFinished);
     qApp->installEventFilter(this);
 }
@@ -136,4 +151,51 @@ void TerminalWindow::onFinished()
     // clear() used to leave a white screen, and the requested behaviour is to
     // leave the terminal directly after `exit`.
     QCoreApplication::quit();
+}
+
+bool TerminalWindow::handleImeKey(int key, Qt::KeyboardModifiers mods,
+                                  const QString& text)
+{
+    if (!ime_.enabled()) return false;
+    QString commit;
+    if (!ime_.handleKey(key, mods, text, &commit)) return false;
+    if (!commit.isEmpty()) sendText(commit);
+    updateImeLabel();
+    return true;
+}
+
+void TerminalWindow::toggleImeMode()
+{
+    if (!ime_.enabled()) return;
+    ime_.toggleMode();
+    updateImeLabel();
+}
+
+void TerminalWindow::layoutImeLabel()
+{
+    if (imeLabel_ == nullptr || !imeLabel_->isVisible()) return;
+    imeLabel_->setFixedWidth(width());
+    imeLabel_->adjustSize();
+    const int h = qMin(imeLabel_->height(), qMax(40, height() / 3));
+    imeLabel_->setGeometry(0, height() - h, width(), h);
+    imeLabel_->raise();
+}
+
+void TerminalWindow::updateImeLabel()
+{
+    if (imeLabel_ == nullptr) return;
+    const QString text = ime_.display();
+    if (text.isEmpty()) {
+        imeLabel_->hide();
+        return;
+    }
+    imeLabel_->setText(text);
+    imeLabel_->show();
+    layoutImeLabel();
+}
+
+void TerminalWindow::resizeEvent(QResizeEvent* event)
+{
+    QTermWidget::resizeEvent(event);
+    layoutImeLabel();
 }
