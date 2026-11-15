@@ -1,9 +1,9 @@
 /*
  * uinput_type: create a virtual USB-like keyboard and type an ASCII string.
- * Used only to test qt_fbterm on a box without a physical keyboard.
+ * Used only to test fbterm-qt on a box without a physical keyboard.
  *
  * Usage: uinput_type "user\npassword\ncommand\n"
- * It waits 3 seconds after creating the device so qt_fbterm's 2-second
+ * It waits 3 seconds after creating the device so fbterm-qt's 2-second
  * hotplug scan can pick it up, types the text, then keeps the device alive
  * for 15 more seconds.
  */
@@ -183,7 +183,7 @@ int main(int argc, char** argv)
 
     struct uinput_user_dev udev;
     memset(&udev, 0, sizeof(udev));
-    snprintf(udev.name, UINPUT_MAX_NAME_SIZE, "qt_fbterm-test-kbd");
+    snprintf(udev.name, UINPUT_MAX_NAME_SIZE, "fbterm-qt-test-kbd");
     udev.id.bustype = BUS_USB;
     udev.id.vendor = 0x1234;
     udev.id.product = 0x5678;
@@ -199,7 +199,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    fprintf(stderr, "virtual keyboard created; waiting for qt_fbterm scan\n");
+    fprintf(stderr, "virtual keyboard created; waiting for fbterm-qt scan\n");
     usleep(3000000);
 
     for (int arg = 1; arg < argc; ++arg) {
