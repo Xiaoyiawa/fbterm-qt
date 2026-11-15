@@ -36,6 +36,7 @@ private:
     pinyin_ime_t* engine_ = nullptr;
     QString buffer_;
     bool chinese_ = true;
+    bool active_ = false;
     int page_ = 0;
 };
 

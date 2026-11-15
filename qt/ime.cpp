@@ -95,6 +95,7 @@ void PinyinIme::toggleMode()
 void PinyinIme::update()
 {
     if (engine_ == nullptr) return;
+    active_ = !buffer_.isEmpty();
     page_ = 0;
     if (buffer_.isEmpty()) {
         pinyin_ime_input(engine_, "");
@@ -107,6 +108,7 @@ void PinyinIme::reset()
 {
     buffer_.clear();
     page_ = 0;
+    active_ = false;
     if (engine_ != nullptr) pinyin_ime_input(engine_, "");
 }
 
@@ -126,6 +128,7 @@ QString PinyinIme::segments() const
 
 bool PinyinIme::hasComposition() const
 {
+    if (!active_) return false;
     return !buffer_.isEmpty() || !currentResult().isEmpty() || !segments().isEmpty();
 }
 
@@ -263,7 +266,7 @@ bool PinyinIme::handleKey(int key, Qt::KeyboardModifiers mods,
 
 QString PinyinIme::display() const
 {
-    if (engine_ == nullptr || !hasComposition()) return QString();
+    if (engine_ == nullptr || !active_ || !hasComposition()) return QString();
 
     const QString result = currentResult();
     const QString segs = segments();
