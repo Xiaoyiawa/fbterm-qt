@@ -6,7 +6,7 @@ assets/
 
 # temporary/debug
 .dev/
-include/
+/include/
 lib/
 
 # vendor sources kept outside the Qt app build
