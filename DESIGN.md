@@ -64,7 +64,9 @@ LVGL 版在 hifb 上遇到 mmap 区域不是实际扫描输出的问题：
   - 字母、数字、符号、方向键、F1-F12、Home/End/PgUp/PgDn、Insert/Delete
   - 合成 `QKeyEvent` 发给当前焦点控件（`Konsole::TerminalDisplay`）
 - 滚轮合成 `QWheelEvent`，交给 QTermWidget 做回滚/程序鼠标上报
-- Backspace 使用 `linux.keytab` → `0x7f`
+- Backspace 使用自定义 `share/keytab/lvfbterm.keytab` → `0x7f`
+- F1-F12 使用 xterm 序列（`linux.keytab` 的 F1-F5 是 `ESC[[A..E`，不兼容
+  `TERM=xterm-256color`，会导致 F2 尾部 `B` 被当字符）
 
 ### 3.3 终端
 

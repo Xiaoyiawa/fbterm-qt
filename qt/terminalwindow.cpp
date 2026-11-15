@@ -22,7 +22,15 @@ TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFami
     setShellProgram(program);
     if (!parts.isEmpty()) setArgs(parts);
     setHistorySize(options_.scrollback);
-    setKeyBindings(QStringLiteral("linux"));
+
+    // Use xterm F1-F12 sequences (the "linux" keytab sends ESC[[A..E for
+    // F1-F5, which xterm-256color cannot parse and leaves a trailing 'B').
+    // QTermWidget resolves keytab names under KB_LAYOUT_DIR; it does not
+    // accept a path, so build.sh installs lvfbterm.keytab there.
+    const QString systemKeytab =
+        QStringLiteral("/usr/share/qtermwidget5/kb-layouts/lvfbterm.keytab");
+    setKeyBindings(QFileInfo::exists(systemKeytab) ? QStringLiteral("lvfbterm")
+                                                   : QStringLiteral("default"));
 
     // QTermWidget inherits the parent environment; make the terminal type
     // explicit instead of relying on the service/session defaults.

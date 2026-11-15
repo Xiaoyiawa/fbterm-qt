@@ -63,7 +63,8 @@ journalctl -u lvfbterm.service -f
 - 键盘拔掉：`read()` 返回 `ENODEV` → 关闭并重新进入 500ms 扫描
 - 所有设备 `EVIOCGRAB`，避免 tty1/fbcon 重复收键
 - 按键合成 `QKeyEvent` 给 `TerminalDisplay`
-- Backspace 走 `linux.keytab`，发 `0x7f`，不会出现 `^H`
+- Backspace 走自定义 `share/keytab/lvfbterm.keytab`，发 `0x7f`，不会出现 `^H`
+- F1-F12 使用 xterm 序列（F2=`ESC O Q`），不会再把 F2 的尾部 `B` 当字符
 
 ## 说明
 

@@ -203,6 +203,11 @@ int main(int argc, char** argv)
     usleep(3000000);
 
     for (int arg = 1; arg < argc; ++arg) {
+        if (strcmp(argv[arg], "@F2") == 0) {
+            tap(KEY_F2, 0);
+            tap(KEY_ENTER, 0);
+            continue;
+        }
         for (const char* p = argv[arg]; *p; ++p) {
             int shift = 0;
             int code = keycode_for(*p, &shift);
