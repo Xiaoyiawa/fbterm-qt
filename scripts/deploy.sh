@@ -15,7 +15,7 @@ DIR=${DEPLOY_DIR:-/root/lvfbterm}
 
 cd "$ROOT"
 
-tar czf - qt | ssh "$HOST" "
+tar czf - qt share | ssh "$HOST" "
     set -e
     mkdir -p '$DIR'
     tar xzf - -C '$DIR'

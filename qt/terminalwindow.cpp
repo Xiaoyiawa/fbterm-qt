@@ -2,6 +2,8 @@
 
 #include <QCoreApplication>
 #include <QFont>
+#include <QFileInfo>
+#include <QProcessEnvironment>
 #include <QKeyEvent>
 #include <QWheelEvent>
 #include <QApplication>
@@ -22,7 +24,24 @@ TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFami
     if (!parts.isEmpty()) setArgs(parts);
     setHistorySize(options_.scrollback);
     setKeyBindings(QStringLiteral("linux"));
-    setColorScheme(QStringLiteral("Linux"));
+
+    // QTermWidget inherits the parent environment; make the terminal type
+    // explicit instead of relying on the service/session defaults.
+    QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+    env.insert(QStringLiteral("TERM"), QStringLiteral("xterm-256color"));
+    env.insert(QStringLiteral("COLORTERM"), QStringLiteral("truecolor"));
+    setEnvironment(env.toStringList());
+
+    const QStringList schemes = {
+        QStringLiteral("./share/color-schemes/Campbell.colorscheme"),
+        QStringLiteral("/root/lvfbterm/share/color-schemes/Campbell.colorscheme"),
+        QStringLiteral("/usr/share/qtermwidget5/color-schemes/Campbell.colorscheme"),
+    };
+    QString scheme;
+    for (const QString& path : schemes) {
+        if (QFileInfo::exists(path)) { scheme = path; break; }
+    }
+    setColorScheme(scheme.isEmpty() ? QStringLiteral("Linux") : scheme);
     setScrollBarPosition(QTermWidget::NoScrollBar);
     setKeyboardCursorShape(Konsole::Emulation::KeyboardCursorShape::BlockCursor);
     setFocusPolicy(Qt::StrongFocus);

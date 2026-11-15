@@ -74,7 +74,13 @@ QTermWidget 负责：
 - VT/ANSI、备用屏幕、颜色、光标、滚动、选区、程序鼠标上报
 - `/bin/login` 退出后 `finished()` → `clear()` + 重新 `startShellProgram()`
 
-### 3.4 字体
+### 3.4 配色
+
+使用 Windows Terminal 的 **Campbell** 配色（背景 `#0C0C0C`，前景 `#CCCCCC`，
+标准 Campbell 16 色）。文件在 `share/color-schemes/Campbell.colorscheme`，
+启动时按完整路径 `setColorScheme()`；不是蓝底的 Campbell PowerShell。
+
+### 3.5 字体
 
 - `QFontDatabase::addApplicationFont("unifont.otf")`
 - `QFont` pixel size 可配（默认 32）；16 的倍数关闭抗锯齿，其余开启
