@@ -19,3 +19,8 @@ qt/Makefile
 qt/*.o
 qt/moc_*
 qt/lvfbterm-qt
+
+# editor temp files
+*.swp
+*.swo
+*~
