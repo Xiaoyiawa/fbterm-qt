@@ -90,7 +90,11 @@ COLORTERM=truecolor
 ```
 
 - 字号默认 32，整数像素
-- 未指定时按顺序找 `./share/unifont.otf`、`/root/fbterm-qt/share/unifont.otf` 等
+- 未指定时**只**找 `font.ttf` / `font.otf`：
+  `./font.ttf`、`./font.otf`、`./share/font.ttf`、`./share/font.otf`、
+  `/root/fbterm-qt/share/font.ttf`、`/root/fbterm-qt/share/font.otf`
+- 两个都没有就使用 Qt 默认字体；要加载 `unifont.otf` 或其它字体，必须显式
+  `--font-path=...`
 - Unifont 是 dual-width（半角 8/16px，全角 16/32px），QTermWidget 会提示
   variable-width，这是正常现象
 - 16 的倍数会关闭抗锯齿，画面更锐利

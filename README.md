@@ -9,7 +9,7 @@
 
 - 显示：Qt5 `linuxfb` → `/dev/fb0`
 - 终端：QTermWidget（VT 解析、PTY、滚动、选区、鼠标上报）
-- 字体：QFontDatabase + Unifont OTF（Qt 底层 FreeType）
+- 字体：默认只找 `font.ttf` / `font.otf`（Qt 底层 FreeType）；没有则用 Qt 默认字体
 - 配色：Windows Terminal **Campbell**（深色 `#0C0C0C`，非 Campbell PowerShell 蓝底）
 - 输入：自管 evdev，`QSocketNotifier` + `EVIOCGRAB`，支持热插拔
 - 会话：`/bin/login`（默认）；登录 shell 里 `exit` 或注销后**直接退出程序**

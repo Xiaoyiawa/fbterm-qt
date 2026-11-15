@@ -42,12 +42,16 @@ QString resolveFontPath(const QString& explicitPath)
 {
     if (!explicitPath.isEmpty()) return explicitPath;
     const QStringList candidates = {
-        QStringLiteral("./unifont.otf"),
-        QStringLiteral("./share/unifont.otf"),
-        QStringLiteral("/root/fbterm-qt/share/unifont.otf"),
-        QStringLiteral("/usr/local/share/fbterm-qt/unifont.otf"),
-        QStringLiteral("/usr/share/fonts/opentype/unifont/unifont.otf"),
-        QStringLiteral("/usr/share/fonts/truetype/unifont/unifont.otf"),
+        // Only these two file names are considered. Use --font-path for
+        // anything else (including unifont.otf).
+        QStringLiteral("./font.ttf"),
+        QStringLiteral("./font.otf"),
+        QStringLiteral("./share/font.ttf"),
+        QStringLiteral("./share/font.otf"),
+        QStringLiteral("/root/fbterm-qt/share/font.ttf"),
+        QStringLiteral("/root/fbterm-qt/share/font.otf"),
+        QStringLiteral("/usr/local/share/fbterm-qt/font.ttf"),
+        QStringLiteral("/usr/local/share/fbterm-qt/font.otf"),
     };
     for (const QString& path : candidates) {
         if (QFileInfo::exists(path)) return path;

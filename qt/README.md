@@ -70,7 +70,7 @@ journalctl -u fbterm-qt.service -f
 
 - 显示：Qt `linuxfb`，启动时 `KD_GRAPHICS`，退出恢复 `KD_TEXT`
 - 终端：QTermWidget 自带 VT 解析和 PTY；**不使用 libvterm**
-- 字体：QFontDatabase 加载 Unifont，经 Qt/FreeType 渲染
+- 字体：默认只加载 `font.ttf` / `font.otf`，没有则用 Qt 默认字体；其它字体用 `--font-path` 指定
 - 配色：`share/color-schemes/Campbell.colorscheme`（Windows Terminal Campbell，深色 `#0C0C0C`）
 - 已知：QTermWidget 会提示 Unifont variable-width；Ctrl+滚轮优先于程序鼠标上报
 - 已知：中文输入法、复制粘贴、systemd 自启未做
