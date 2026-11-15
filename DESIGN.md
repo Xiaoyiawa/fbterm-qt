@@ -72,7 +72,8 @@ QTermWidget 负责：
 
 - PTY 创建、`fork/exec`、窗口大小、`SIGWINCH`
 - VT/ANSI、备用屏幕、颜色、光标、滚动、选区、程序鼠标上报
-- `/bin/login` 退出后 `finished()` → `clear()` + 重新 `startShellProgram()`
+- `/bin/login` 或 shell 退出后 `finished()` → `QCoreApplication::quit()`
+  （不调用 `clear()`、不重启 login；避免退出时白屏）
 
 ### 3.4 配色
 

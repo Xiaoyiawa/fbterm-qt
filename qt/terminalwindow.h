@@ -27,7 +27,6 @@ private:
     QtOptions options_;
     QString fontFamily_;
     int fontSize_ = 32;
-    bool loginMode_ = true;
 };
 
 #endif

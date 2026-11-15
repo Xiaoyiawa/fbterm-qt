@@ -12,7 +12,7 @@
 - 字体：QFontDatabase + Unifont OTF（Qt 底层 FreeType）
 - 配色：Windows Terminal **Campbell**（深色 `#0C0C0C`，非 Campbell PowerShell 蓝底）
 - 输入：自管 evdev，`QSocketNotifier` + `EVIOCGRAB`，支持热插拔
-- 会话：`/bin/login`（默认），注销自动重开
+- 会话：`/bin/login`（默认）；登录 shell 里 `exit` 或注销后**直接退出程序**
 - 语言：C++11，qmake 构建
 
 ## 目录

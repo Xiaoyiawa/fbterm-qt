@@ -18,7 +18,6 @@ TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFami
     QStringList parts = splitCommandLine(options_.shell);
     if (parts.isEmpty()) parts << QStringLiteral("/bin/login");
     const QString program = parts.takeFirst();
-    loginMode_ = program.endsWith(QStringLiteral("login"));
 
     setShellProgram(program);
     if (!parts.isEmpty()) setArgs(parts);
@@ -125,10 +124,8 @@ void TerminalWindow::wheelEvent(QWheelEvent* event)
 
 void TerminalWindow::onFinished()
 {
-    if (loginMode_) {
-        clear();
-        startShellProgram();
-    } else {
-        QCoreApplication::quit();
-    }
+    // The PTY child (login/shell) is gone. Do not clear/restart the widget:
+    // clear() used to leave a white screen, and the requested behaviour is to
+    // leave the terminal directly after `exit`.
+    QCoreApplication::quit();
 }
