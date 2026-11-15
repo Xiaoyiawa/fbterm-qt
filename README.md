@@ -1,205 +1,128 @@
 # lvfbterm
 
-在 Linux 帧缓冲（`/dev/fb0`）上运行的本地伪终端。
+在 Linux 帧缓冲 `/dev/fb0` 上运行的本地伪终端。
 
-- 显示：LVGL + Linux fbdev 驱动
-- 字形：FreeType + Unifont
-- 终端语义：libvterm
-- 会话：`forkpty()` + `/bin/login`（默认）
-- 输入：USB 键盘（evdev）+ 鼠标滚轮
-- 语言：C++11 + C11，Makefile 构建
+当前版本基于 **Qt 5 + QTermWidget**，使用 Qt 的 `linuxfb` 平台插件直接输出到
+Hi3798MV100（hifb，1920×1080/32bpp）的 HDMI 画面。
 
-设计细节见 [DESIGN.md](DESIGN.md)。
+- 显示：Qt5 `linuxfb` → `/dev/fb0`
+- 终端：QTermWidget（VT 解析、PTY、滚动、选区、鼠标上报）
+- 字体：QFontDatabase + Unifont OTF（Qt 底层 FreeType）
+- 输入：自管 evdev，`QSocketNotifier` + `EVIOCGRAB`，支持热插拔
+- 会话：`/bin/login`（默认），注销自动重开
+- 语言：C++11，qmake 构建
 
-## 两个版本
-
-- **Qt 版（当前推荐）**：`bin/lvfbterm`，Qt 5 + QTermWidget + `linuxfb`。
-  已在设备上实测登录、MOTD、命令执行；键盘走 Qt evdev 插件。源码在 `qt/`。
-- **LVGL 版（legacy）**：`bin/lvfbterm-lvgl`，LVGL + FreeType + libvterm 自绘。
-  源码在 `src/`；hifb 的 mmap 不参与扫描输出，需要 `write()` 刷屏（已配置）。
-
-Qt 版没有使用 libvterm：QTermWidget 自带 VT 解析、PTY、滚动和选区。
-如果必须保留 libvterm，继续用 LVGL 版或下一步做“Qt 窗口 + libvterm + QPainter”的混合版。
-
-![Qt 版实机截图](docs/qt-screenshot.png)
-
-![LVGL 版登录界面](docs/screenshot.png)
-
-## 当前状态
-
-已在 `192.168.1.15` 上跑通：
-
-- `/dev/fb0`（hifb，1920×1080/32bpp）初始化、LVGL canvas、整屏 flush
-- Unifont OTF 加载，ASCII/中文/框线/256 色/ANSI 备用屏幕由 libvterm 解析
-- `/bin/login` 登录提示、登录后的 shell 与 MOTD 正常渲染
-- `Ctrl+Alt+Q` 退出并恢复文本控制台
-
-输入部分已识别到真实 USB 键盘（SIGMACHIP USB Keyboard → `/dev/input/event0`），
-登录后按键链路待你实机确认。若仍有丢键，优先检查 `/dev/input/event*` 是否被其他进程 grab。
-
-hifb 的 mmap 写不会自动上屏，每帧后必须调用私有 ioctl
-`ioctl(fb, 0x4606, &vinfo)` 提交；旧项目里的 `lcd_refresh()` 就是这句。
-本项目保留 `LV_LINUX_FBDEV_MMAP=1`，由 `Display::commitFb()` 在每帧后提交。
+![Qt 终端截图](docs/qt-screenshot.png)
 
 ## 目标设备
 
 `root@192.168.1.15`：
 
 - Hi3798MV100 / armv7l / Ubuntu 20.04 armhf
-- `/dev/fb0`：`hifb`，1920×1080，32bpp，XRGB8888
-- 交叉工具链：`~/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-`
+- `/dev/fb0`：`hifb`，1920×1080，32bpp
+- Qt 5.12.8 + QTermWidget 0.14.1（已安装）
 
 ## 目录
 
 ```
 .
-├── Makefile
-├── config/lv_conf.h        # 精简 LVGL 配置
-├── src/                    # 主程序
-├── tools/fb_probe.c        # 帧缓冲自检
-├── scripts/deploy.sh       # 构建 + 打包 + 部署
-├── assets/unifont.otf      # make 时从 tarball 解出
-├── build/                  # 中间产物/依赖
-└── bin/lvfbterm
+├── qt/                     Qt/QTermWidget 主程序
+│   ├── main.cpp            linuxfb、字体、启动 QT
+│   ├── terminalwindow.*    QTermWidget 窗口/字体/快捷键
+│   ├── evdevinput.*        键盘/鼠标热插拔输入
+│   ├── consolemode.*       KD_GRAPHICS / KD_TEXT
+│   └── lvfbterm-qt.pro
+├── scripts/deploy.sh       复制源码到设备并在设备上构建
+├── tools/                  fb_probe / uinput_type / fb_ffmpeg_bridge
+├── docs/                   实机截图
+├── assets/                 make 时解出的 unifont.otf（git 忽略）
+└── bin/                    lvfbterm（git 忽略）
 ```
 
 ## 依赖
 
-同目录下需要：
+设备上：
 
-- `lvgl/`（静态编译，链进主程序）
-- `libvterm/`（编译成 `libvterm.so`）
-- `freetype/`（编译成 `libfreetype.so`）
+```sh
+apt-get install -y g++ qtbase5-dev qtbase5-dev-tools \
+    libqtermwidget5-0-dev libutf8proc-dev
+```
 
-`unifont-18.0.01.tar.gz` 放在项目根目录，`make` 会解出 `assets/unifont.otf`。
+`unifont.otf` 需要放到 `share/unifont.otf`，或者用 `--font-path` 指定。
 
 ## 构建
 
-```sh
-make -j4
-```
-
-默认使用：
+在目标机上原生构建：
 
 ```sh
-$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-
+cd /root/lvfbterm/qt
+./build.sh
 ```
 
-可覆盖：
+产物：`../bin/lvfbterm`。
 
-```sh
-make -j4 CROSS_COMPILE=/path/to/arm-unknown-linux-gnueabihf-
-```
-
-产物：
-
-```
-bin/lvfbterm
-build/deps/lib/liblvgl.a
-build/deps/lib/libvterm.so*
-build/deps/lib/libfreetype.so*
-assets/unifont.otf
-```
-
-单独构建依赖：
-
-```sh
-make deps
-```
-
-## 部署
+从主机部署并构建：
 
 ```sh
 ./scripts/deploy.sh
 ```
 
-默认部署到 `root@192.168.1.15:/root/lvfbterm`，使用 ssh 自己的认证方式（密钥或交互密码）。目标机只需要 `sh` 和 `tar`，不需要 rsync。
-
-目录结构：
-
-```
-/root/lvfbterm/
-├── bin/lvfbterm
-├── lib/libvterm.so*
-├── lib/libfreetype.so*
-└── share/unifont.otf
-```
-
-主程序带 `rpath=$ORIGIN/../lib`，直接运行即可找到两个 `.so`。
+默认 `DEPLOY_HOST=root@192.168.1.15`、`DEPLOY_DIR=/root/lvfbterm`，
+可覆盖。
 
 ## 运行
 
 ```sh
-ssh root@192.168.1.15
 cd /root/lvfbterm
-./bin/lvfbterm --font-path=share/unifont.otf
+./bin/lvfbterm
 ```
 
-常用参数：
+参数：
 
-```
---fb=/dev/fb0            帧缓冲设备
---font-size=32           字号（8..96，默认 32）
---font-path=PATH         字体，可重复；第一个主字体，其余 fallback
---scrollback=5000        回滚行数
---shell=CMD              PTY 程序，默认 /bin/login
---keyboard=PATH          evdev 键盘，可重复
---mouse=PATH             evdev 鼠标，可重复
---log-level=debug        日志级别
+```text
+--font-path=PATH      Unifont OTF 路径
+--font-size=N         8..96，默认 32
+--shell=CMD           默认 /bin/login
+--scrollback=N        默认 5000
+--keyboard=PATH       指定键盘（默认自动扫描）
+--mouse=PATH          指定鼠标（默认自动扫描）
 ```
 
-## 快捷键
+快捷键：
 
-| 操作 | 行为 |
-|---|---|
-| `Ctrl+Alt+Q` | 退出程序，恢复文本控制台 |
-| `Ctrl+滚轮` | 字号 ±2px，重算行列并发 `SIGWINCH` |
-| 滚轮 | 程序开了鼠标上报 → 给程序；否则主屏幕滚回滚，备用屏幕发 ↑/↓ |
-| 普通键 | 原样送入 PTY；`Ctrl+C`、`Ctrl+Z` 等不会被拦截 |
-| `Shift+Tab`、方向键、F1-F12 | 按 xterm 序列送入 PTY |
+- `Ctrl+Alt+Q` 退出，恢复文本控制台
+- `Ctrl+滚轮` 字号 ±2px
 
-`/bin/login` 注销后会自动重新拉起登录提示；`--shell=/bin/bash` 退出则整个程序退出。
+## 输入热插拔
 
-## 字体
+输入层不依赖 Qt 的 evdev 通用插件，而是自己读 `/dev/input/event*`：
 
-- 默认搜索 `./unifont.otf`、`./share/unifont.otf`、`../share/unifont.otf`、系统字体目录。
-- 第一个是主字体，决定 cell 大小；后面的作为缺字 fallback。
-- 等宽判定按“ASCII 半角步进一致、全角 2 倍”，兼容 Unifont 的 dual-width（fontconfig 里是 `spacing: 90`，不是 `mono`）。
-- 主字体非等宽只告警，仍继续用，格宽取 `'M'`。
-- 缺字画空心方块。
-- 所有字体都加载失败时画空心方块（LVGL 内置字体回退尚未接到自绘管线）。
-- 16 的整数倍字号用 1-bit 点阵渲染，其它字号用灰度抗锯齿。
+- **没有键盘时每 500ms 扫描一次**；找到键盘后停止扫描
+- **鼠标每 10s 扫描一次**
+- 键盘拔掉时 `read()` 返回 `ENODEV` → 关闭 fd、删 `QSocketNotifier`；
+  如果没有键盘了，重新进入 500ms 扫描
+- 每个设备都 `EVIOCGRAB`，避免 tty1/fbcon 再收一份键
+- 按键合成 `QKeyEvent` 发给 `TerminalDisplay`
+- 滚轮合成 `QWheelEvent`
 
-## 调试
+`Backspace` 使用 QTermWidget 的 `linux.keytab`，发送 `0x7f`（DEL），不会出现 `^H`。
 
-输入模拟（无物理键盘时）：
+已验证：程序先无键盘启动，2 秒后插入 uinput 键盘，500ms 内自动接管；
+输入 `abc` + Backspace + `d` 显示 `abd`，见 [docs/qt-input-test.png](docs/qt-input-test.png)。
 
-```sh
-# 设备上需要 /dev/uinput；它会创建一个名为 lvfbterm-test-kbd 的虚拟键盘
-make -C /home/xiaoyi/lvfbterm  # 主机上先构建
-# 把 tools/uinput_type.c 交叉编译后放到设备上，例如：
-~/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-gcc \
-  -O2 tools/uinput_type.c -o build/uinput_type
-scp build/uinput_type root@192.168.1.15:/root/lvfbterm/bin/
-```
+## 显示
 
-帧缓冲自检：
-
-```sh
-make probe
-scp build/fb_probe root@192.168.1.15:/tmp/
-ssh root@192.168.1.15 /tmp/fb_probe /dev/fb0
-```
-
-它会打印分辨率、像素格式、mmap、第二页写读、`FBIOPAN_DISPLAY` 结果，不会改变可见画面。
-
-程序日志默认输出到 stderr，SSH 运行时直接可见；`--log-level=debug` 打开详细日志。
+- 启动时对 `/dev/tty0` 执行 `KDSETMODE(KD_GRAPHICS)`，阻止 tty1 fbcon 叠加；
+  退出时恢复 `KD_TEXT`
+- 不在启动时探测 Qt 通用 evdev 插件，避免和 tty1/SSH stdin 形成第二路输入
+- hifb 的 mmap 不参与扫描输出；Qt linuxfb 走自己的刷新路径，已实测可显示
 
 ## 已知限制
 
-- 暂不支持中文输入法（后续可接 libpinyinime，不用 LVGL 自带 IME）。
-- 不支持鼠标点击/拖选/复制粘贴、超链接、Sixel/Kitty 图形。
-- 不支持多标签/多窗口/状态栏。
-- 缩放后回滚历史不重排，按新列宽裁剪/补空。
-- 先手动运行，未提供 systemd unit。
-- 键盘固定 US QWERTY。
+- QTermWidget 使用自带 VT 解析，**不再使用 libvterm**。
+  工作区里的 `freetype/`、`libvterm/` 是旧 LVGL 版遗留源码，Qt 版不链接。
+- QTermWidget 会提示 Unifont 是 variable-width（dual-width 的正常现象），
+  实测登录/MOTD/中文对齐正常。
+- `Ctrl+滚轮` 缩放优先于程序鼠标上报（QTermWidget 未暴露终端 mouse mode）。
+- 暂不支持中文输入法、复制粘贴、systemd 自启。
+- 鼠标热插拔逻辑已实现；当前设备没有鼠标，滚轮/缩放尚未实机验证。

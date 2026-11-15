@@ -9,8 +9,7 @@ assets/
 include/
 lib/
 
-# vendor sources: each is its own git repository
-/lvgl/
+# vendor sources kept outside the Qt app build
 /libvterm/
 /freetype/
 /unifont-18.0.01.tar.gz

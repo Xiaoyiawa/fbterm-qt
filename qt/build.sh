@@ -5,5 +5,6 @@ set -eu
 cd "$(dirname "$0")"
 qmake lvfbterm-qt.pro
 make -j"${JOBS:-4}"
+mkdir -p ../bin
 cp -f lvfbterm-qt ../bin/lvfbterm
 echo "built and installed: ../bin/lvfbterm"
