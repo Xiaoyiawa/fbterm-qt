@@ -16,6 +16,14 @@
 - 会话：`/bin/login`（默认）；登录 shell 里 `exit` 或注销后**直接退出程序**
 - 语言：C++17，qmake 构建
 
+## 截图
+
+![登录界面](docs/login.png)
+
+![Vim](docs/vim.png)
+
+![中文输入](docs/ime.png)
+
 ## 目录
 
 ```text

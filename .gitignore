@@ -14,3 +14,8 @@ qt/Makefile
 qt/*.o
 qt/moc_*
 qt/fbterm-qt
+
+# user-supplied terminal font
+/share/font.ttf
+/share/font.otf
+/share/fonts/
