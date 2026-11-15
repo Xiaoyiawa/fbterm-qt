@@ -120,7 +120,7 @@ cd /root/lvfbterm
 ## 已知限制
 
 - QTermWidget 使用自带 VT 解析，**不再使用 libvterm**。
-  工作区里的 `freetype/`、`libvterm/` 是旧 LVGL 版遗留源码，Qt 版不链接。
+  工作区里的 `freetype/` 是旧 LVGL 版遗留源码，Qt 版不链接。
 - QTermWidget 会提示 Unifont 是 variable-width（dual-width 的正常现象），
   实测登录/MOTD/中文对齐正常。
 - `Ctrl+滚轮` 缩放优先于程序鼠标上报（QTermWidget 未暴露终端 mouse mode）。

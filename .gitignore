@@ -10,7 +10,6 @@ include/
 lib/
 
 # vendor sources kept outside the Qt app build
-/libvterm/
 /freetype/
 /unifont-18.0.01.tar.gz
 
