@@ -1,7 +1,7 @@
 # fbterm-qt
 
-在 Linux 帧缓冲 `/dev/fb0` 上运行的本地伪终端。
-其实只是为自己的机顶盒写的
+在 Linux 帧缓冲 `/dev/fb0` 上运行的本地伪终端。<br>
+其实只是为自己的机顶盒写的<br>
 因为我不想每次都要ssh进去才能操作...
 纯vibe coding，勿喷QAQ
 
@@ -12,7 +12,7 @@
 - 字体：默认只找 `font.ttf` / `font.otf`（Qt 底层 FreeType）；没有则用 Qt 默认字体
 - 配色：Windows Terminal **Campbell**（深色 `#0C0C0C`，非 Campbell PowerShell 蓝底）
 - 输入：自管 evdev，`QSocketNotifier` + `EVIOCGRAB`，支持热插拔
-- 中文输入：内置 libpinyinime，Shift 切换中英，空格/数字选词，全角标点
+- 中文输入：使用https://github.com/RobinNotBad/libpinyinime大佬的轻量级输入法，Shift 切换中英，空格/数字选词，全角标点
 - 会话：`/bin/login`（默认）；登录 shell 里 `exit` 或注销后**直接退出程序**
 - 语言：C++17，qmake 构建
 
@@ -51,7 +51,6 @@
 └── Makefile
 ```
 
-运行时生成/部署产物 `bin/`、`build/` 不提交。
 
 ## 依赖
 
@@ -88,9 +87,6 @@ cd /root/fbterm-qt/qt
 ./scripts/deploy.sh
 ```
 
-默认 `DEPLOY_HOST=root@192.168.1.15`、`DEPLOY_DIR=/root/fbterm-qt`，
-可覆盖。
-
 ## 运行
 
 ```sh
@@ -115,39 +111,6 @@ cd /root/fbterm-qt
 - `Ctrl+Alt+Q` 退出，恢复文本控制台
 - `Ctrl+滚轮` 字号 ±2px
 
-## 开机自启动
-
-设备上已安装 systemd 服务：
-
-```sh
-systemctl enable fbterm-qt.service
-systemctl start fbterm-qt.service
-```
-
-仓库里的安装脚本（会禁用 `getty@tty1`，避免和 framebuffer 终端抢 VT）：
-
-```sh
-cd /root/fbterm-qt
-./scripts/install-service.sh
-```
-
-查看：
-
-```sh
-systemctl status fbterm-qt.service
-journalctl -u fbterm-qt.service -f
-```
-
-停止/禁用：
-
-```sh
-systemctl stop fbterm-qt.service
-systemctl disable --now fbterm-qt.service
-```
-
-`Ctrl+Alt+Q` 正常退出后服务不会自动重启（`Restart=on-failure`）；
-需要继续运行用 `systemctl start fbterm-qt.service`。如果希望退出后也自动拉起，
-把 `Restart=on-failure` 改成 `Restart=always`。
 
 ## 中文输入法
 
@@ -186,9 +149,4 @@ systemctl disable --now fbterm-qt.service
 - 不在启动时探测 Qt 通用 evdev 插件，避免和 tty1/SSH stdin 形成第二路输入
 - hifb 的 mmap 不参与扫描输出；Qt linuxfb 走自己的刷新路径，已实测可显示
 
-## 已知限制
 
-- QTermWidget 会提示 Unifont 是 variable-width（dual-width 的正常现象），
-  实测登录/MOTD/中文对齐正常。
-- 暂不支持中文输入法、复制粘贴、systemd 自启。
-- 鼠标热插拔逻辑已实现；当前设备没有鼠标，滚轮/缩放尚未实机验证。
