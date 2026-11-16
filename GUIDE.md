@@ -301,7 +301,7 @@ apt-get install -y g++ qtbase5-dev qtbase5-dev-tools \
 
 ```sh
 grep -RIn "fbterm-qt\|/usr/share/fbterm-qt" \
-    qt systemd scripts README.md GUIDE.md
+    qt systemd Makefile README.md GUIDE.md
 ```
 
 需要改的常见位置：
@@ -309,40 +309,56 @@ grep -RIn "fbterm-qt\|/usr/share/fbterm-qt" \
 - `qt/options.cpp`：默认字体搜索路径
 - `qt/terminalwindow.cpp`：配色、keytab、工作目录
 - `systemd/fbterm-qt.service`：`WorkingDirectory`、`ExecStart`、`RuntimeDirectory`
-- `scripts/deploy.sh`：`DEPLOY_DIR`
+- `Makefile`：`SYSROOT`、`PREFIX`、`DESTDIR`
 - `README.md` / `GUIDE.md`：示例路径
 
-### 3.4 构建（交叉编译）
+### 3.4 构建
 
-主机使用 `~/x-tools/arm-unknown-linux-gnueabihf`，不做目标机原生编译。
+只用 Makefile，工具链通过环境变量传入：
 
 ```sh
-./scripts/fetch-sysroot.sh    # 第一次：arm Qt/QTermWidget 头文件/库 + 目标机 moc
-./scripts/cross-build.sh      # 主机交叉编译 -> build/cross/fbterm-qt
-./scripts/install-target.sh   # 安装到目标 /usr
+export CC=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-gcc
+export CXX=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-g++
+export LD=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-g++
+export AR=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-ar
+export RANLIB=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-ranlib
+
+make SYSROOT=build/sysroot
 ```
 
-`fetch-sysroot.sh` 会把目标机的 Qt 头文件和 arm 库拉到 `build/sysroot`，
-并在目标机 `/tmp` 解一份源码生成 moc；`cross-build.sh` 不需要目标机参与。
-
-安装位置：
+构建产物：
 
 ```text
-/usr/bin/fbterm-qt
-/usr/share/fbterm-qt/{pinyin.txt,dictionary.data,font.ttf,color-schemes/}
-/usr/lib/systemd/system/fbterm-qt.service
-/usr/share/qtermwidget5/kb-layouts/fbterm-qt.keytab
+build/fbterm-qt
+build/lib/libpinyinime.a
 ```
+
+`make install` 只做 staging：
+
+```text
+build/usr/bin/fbterm-qt
+build/usr/share/fbterm-qt/{Unifont.otf,font.otf,pinyin.txt,dictionary.data,...}
+build/usr/lib/systemd/system/fbterm-qt.service
+build/usr/share/qtermwidget5/kb-layouts/fbterm-qt.keytab
+```
+
+部署：
+
+```sh
+tar -C build/usr -cf - . | ssh root@192.168.1.15 'tar -C / -xf -'
+```
+
+`SYSROOT` 需要 arm Qt/QTermWidget 头和库；没有 sysroot 时可用
+`CPPFLAGS` / `LDFLAGS` 直接指定。`qt/generated/` 是已生成 moc，改了
+`Q_OBJECT` 头文件后用 `make moc MOC=/path/to/moc` 重新生成。
 
 ### 3.5 不同架构 / 发行版
 
-- `qt/fbterm-qt.pro` 里 `LIBS` 写死了
-  `/usr/lib/arm-linux-gnueabihf/libutf8proc.so.2`
-  → 改成目标架构路径，或装 `libutf8proc-dev` 后用 `-lutf8proc`
-- QTermWidget 头文件默认 `/usr/include/qtermwidget5`
-  → 按发行版改 `INCLUDEPATH`
+- `Makefile` 的 `SYSROOT` 路径按目标架构改
+- `CPPFLAGS` / `LDFLAGS` / `LDLIBS` 可在命令行覆盖
+- QTermWidget 头文件默认在 `$(SYSROOT)/usr/include/qtermwidget5`
 - Qt 版本建议 ≥ 5.12；QTermWidget 版本差异主要在配色/键表 API
-- 若用交叉 Qt，用 Qt 的 sysroot 重新跑 `qmake`，不要复用目标机 Makefile
+- 换架构时同时换 `CC/CXX/LD/AR/RANLIB` 和 sysroot
 
 ### 3.6 验收清单
 
@@ -392,10 +408,11 @@ qt/
 ├── consolemode.*         KD_GRAPHICS / KD_TEXT
 ├── signalbridge.*        SIGTERM → Qt quit
 ├── options.*             命令行
-└── fbterm-qt.pro
+├── generated/            目标机 Qt 5.12 moc
+└── vendor/pinyinime/     拼音引擎
 
 systemd/fbterm-qt.service
-scripts/deploy.sh
+Makefile
 share/color-schemes/Campbell.colorscheme
 share/keytab/fbterm-qt.keytab
 share/pinyin.txt

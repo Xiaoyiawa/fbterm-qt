@@ -12,15 +12,20 @@ apt-get install -y g++ qtbase5-dev qtbase5-dev-tools \
 
 ## 构建
 
-交叉编译，不在目标机原生编译：
+用 Makefile，不调用额外脚本：
 
 ```sh
-./scripts/fetch-sysroot.sh   # 首次：取 arm Qt/QTermWidget + 目标机 moc
-./scripts/cross-build.sh
-./scripts/install-target.sh
+export CC=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-gcc
+export CXX=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-g++
+export LD=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-g++
+export AR=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-ar
+export RANLIB=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-ranlib
+
+make SYSROOT=build/sysroot
+make install
 ```
 
-产物安装到 `/usr/bin/fbterm-qt`、`/usr/share/fbterm-qt/`。
+`build/fbterm-qt` 是二进制，`build/usr/` 是完整安装树。
 
 ## 运行
 
@@ -52,14 +57,14 @@ apt-get install -y g++ qtbase5-dev qtbase5-dev-tools \
 
 ## 开机自启动
 
-仓库根目录的 systemd unit 和安装脚本：
+systemd 服务：
 
 ```sh
 systemctl status fbterm-qt.service
 journalctl -u fbterm-qt.service -f
 ```
 
-安装时 `install-target.sh` 会把 unit 放到 `/usr/lib/systemd/system`，并禁用 `getty@tty1`。
+`make install` 会把 unit stage 到 `build/usr/lib/systemd/system`；部署时整棵 `build/usr` 覆盖到目标 `/`。
 `Ctrl+Alt+Q` 正常退出后服务不自动重启（`Restart=on-failure`）。
 
 ## 输入热插拔

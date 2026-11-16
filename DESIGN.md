@@ -119,16 +119,15 @@ QTermWidget 负责：
 
 `qt/signalbridge.*` 把 `SIGTERM/SIGINT/SIGHUP` 通过 pipe + `QSocketNotifier`
 转成 Qt 退出事件，保证 `ConsoleMode` 析构时恢复 `KDTEXT`。
-`scripts/install-target.sh` 负责安装 unit、数据、keytab，并 enable + start。
+`make install` 把 unit、数据、keytab 和 Unifont 全部 stage 到 `build/usr/`。
 
 ## 5. 构建与部署
 
-- 主机交叉编译（`~/x-tools/arm-unknown-linux-gnueabihf`）
-- `scripts/fetch-sysroot.sh`：从目标机取 arm Qt/QTermWidget 头文件和库，
-  并在目标机生成 moc
-- `scripts/cross-build.sh`：主机 g++ 交叉编译
-- `scripts/install-target.sh`：安装到 `/usr/bin`、`/usr/share/fbterm-qt`、
-  `/usr/lib/systemd/system`
+- 只用 Makefile；工具链来自环境变量 `CC/CXX/LD/AR/RANLIB`
+- `SYSROOT` 指向目标 arm Qt/QTermWidget 头文件和库
+- `make` → `build/fbterm-qt`、`build/lib/libpinyinime.a`
+- `make install` → `build/usr/` 完整 staging，不需要 root
+- `qt/generated/` 是目标机 Qt 5.12 生成的 moc
 - 不做目标机原生编译
 
 ## 5. 目录
@@ -136,8 +135,8 @@ QTermWidget 负责：
 ```
 qt/           Qt 主程序
 docs/         实机截图
-scripts/      部署
 tools/        fb_probe / uinput_type / fb_ffmpeg_bridge
+Makefile      交叉构建与 staging
 ```
 
 ## 6. 限制

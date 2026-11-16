@@ -37,15 +37,15 @@
 │   ├── evdevinput.*          键盘/鼠标热插拔输入
 │   ├── consolemode.*         KD_GRAPHICS / KD_TEXT
 │   ├── signalbridge.*        SIGTERM → Qt quit
-│   ├── vendor/pinyinime/     内置拼音引擎源码
-│   └── fbterm-qt.pro
+│   ├── generated/            目标机 Qt 5.12 生成的 moc
+│   └── vendor/pinyinime/     内置拼音引擎源码
 ├── share/
 │   ├── color-schemes/        Campbell.colorscheme
 │   ├── keytab/               fbterm-qt.keytab
 │   ├── pinyin.txt            拼音表
-│   └── dictionary.data       词典
+│   ├── dictionary.data       词典
+│   └── Unifont.otf           打包进 build/usr 的字体
 ├── systemd/fbterm-qt.service
-├── scripts/                  fetch-sysroot / cross-build / install-target / deploy
 ├── tools/                    fb_probe / uinput_type / fb_ffmpeg_bridge
 ├── docs/                     实机截图
 ├── GUIDE.md                  使用、调优、移植
@@ -72,38 +72,72 @@ apt-get install -y g++ qtbase5-dev qtbase5-dev-tools \
 
 输入法候选条和“中/EN”toast 复用当前终端字体。
 
-## 构建（交叉编译）
+## 构建
 
-主机上需要 `~/x-tools/arm-unknown-linux-gnueabihf`，目标机需开启 SSH。
-第一次先取目标机的 arm Qt/QTermWidget 头文件和库，并在目标机上生成 moc：
-
-```sh
-./scripts/fetch-sysroot.sh
-```
-
-然后交叉编译并安装到目标 `/usr`：
+用 Makefile 和标准环境变量，不用构建脚本：
 
 ```sh
-./scripts/cross-build.sh
-./scripts/install-target.sh
+export CC=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-gcc
+export CXX=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-g++
+export LD=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-g++
+export AR=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-ar
+export RANLIB=$HOME/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-ranlib
+
+make SYSROOT=build/sysroot
 ```
 
-或者一条命令：
+产物：
+
+```text
+build/fbterm-qt
+build/lib/libpinyinime.a
+```
+
+`SYSROOT` 里需要目标机的：
+
+```text
+usr/include/arm-linux-gnueabihf/qt5/
+usr/include/qtermwidget5/
+usr/lib/arm-linux-gnueabihf/libQt5*.so*
+usr/lib/arm-linux-gnueabihf/libqtermwidget5.so*
+```
+
+也可以不用 `SYSROOT`，直接通过 `CPPFLAGS` / `LDFLAGS` 指定头文件和库路径。
+
+`qt/generated/` 里是目标机 Qt 5.12 生成的 moc；只有改了 `Q_OBJECT` 头文件才需要重新生成：
+
+```sh
+make moc MOC=/path/to/moc
+```
+
+## 打包
 
 ```sh
 make install
 ```
 
-安装位置：
+产物全部进入：
 
 ```text
-/usr/bin/fbterm-qt
-/usr/share/fbterm-qt/{pinyin.txt,dictionary.data,font.ttf,color-schemes/}
-/usr/lib/systemd/system/fbterm-qt.service
-/usr/share/qtermwidget5/kb-layouts/fbterm-qt.keytab
+build/usr/
+├── bin/fbterm-qt
+├── lib/systemd/system/fbterm-qt.service
+└── share/
+    ├── fbterm-qt/
+    │   ├── Unifont.otf
+    │   ├── font.otf
+    │   ├── pinyin.txt
+    │   ├── dictionary.data
+    │   └── color-schemes/Campbell.colorscheme
+    └── qtermwidget5/kb-layouts/fbterm-qt.keytab
 ```
 
-不再在设备上原生 `qmake/make`。
+`make install` 只写 `build/usr`，不需要 root。部署时整个目录覆盖到目标 `/`：
+
+```sh
+tar -C build/usr -cf - . | ssh root@192.168.1.15 'tar -C / -xf -'
+```
+
 
 ## 运行
 
