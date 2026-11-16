@@ -197,12 +197,14 @@ bool PinyinIme::handleKey(int key, Qt::KeyboardModifiers mods,
         reset();
         return true;
     }
-    if (key == Qt::Key_PageDown || key == Qt::Key_PageUp) {
+    if (key == Qt::Key_PageDown || key == Qt::Key_PageUp ||
+        key == Qt::Key_Right || key == Qt::Key_Left) {
         if (!hasComposition()) return false;
         const int count = pinyin_ime_get_candidate_count(engine_);
         const int pages = (count + 8) / 9;
         if (pages <= 0) return true;
-        if (key == Qt::Key_PageDown) {
+        const bool next = (key == Qt::Key_PageDown || key == Qt::Key_Right);
+        if (next) {
             if (page_ + 1 < pages) ++page_;
         } else if (page_ > 0) {
             --page_;
@@ -286,6 +288,7 @@ QString PinyinIme::display() const
     if (page >= pages) page = pages - 1;
     if (page < 0) page = 0;
     out += QStringLiteral("  [%1/%2]").arg(page + 1).arg(pages);
+    if (page > 0) out += QStringLiteral("  <-");
     const int begin = page * 9;
     const int end = std::min(count, begin + 9);
     for (int i = begin; i < end; ++i) {
@@ -293,5 +296,6 @@ QString PinyinIme::display() const
         if (cand == nullptr) continue;
         out += QStringLiteral("  %1.%2").arg(i - begin + 1).arg(QString::fromUtf8(cand));
     }
+    if (page + 1 < pages) out += QStringLiteral("  ->");
     return out;
 }

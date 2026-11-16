@@ -85,7 +85,7 @@ share/dictionary.data
 | 字母 | 中文模式输入拼音，库自动分音节（`zhendema` → `zhen'de'ma`） |
 | `空格` | 选当前页第 1 个候选 |
 | `1`-`9` | 选当前页对应候选 |
-| `PageUp` / `PageDown` | 候选翻页 |
+| `→` / `←` | 下一页 / 上一页候选；末尾 `->` 表示还有 |
 | `Backspace` | 删除一个拼音字母 |
 | `Esc` | 清空拼音 |
 | `Enter` | 原样提交拼音 |
@@ -236,7 +236,7 @@ systemd 里禁用 `getty@tty1`，否则会抢 VT。不要同时保留两个 fram
 - 换词库：替换这两个文件后重启服务
 - 选词后库通过 `pinyin_ime_get_segments()` 保留剩余音节；例如选“真”后
   候选条显示 `de'ma`，继续选即可，不会重置已选结果
-- 候选每页 9 个，`PageUp` / `PageDown` 翻页
+- 候选每页 9 个；`→` 下一页、`←` 上一页；末尾 `->` 表示还有更多
 - 拼音串/候选条样式在 `qt/terminalwindow.cpp` 的 `imeLabel_` 样式表
 - 全角标点表在 `qt/ime.cpp` 的 `fullWidth()`
 - 扫描频率/热插拔在 `qt/evdevinput.cpp`

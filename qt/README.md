@@ -39,7 +39,7 @@ cd /root/fbterm-qt
 ```
 
 中文输入法默认启用，数据在 `share/pinyin.txt`、`share/dictionary.data`。
-`Shift` 单击切换中英；空格/数字选词，PageUp/PageDown 翻页；选词后保留剩余拼音
+`Shift` 单击切换中英；空格/数字选词，→/← 翻页；末尾 `->` 表示还有候选；选词后保留剩余拼音
 （`zhendema` 选“真”后剩 `de'ma`）；中文模式标点自动全角；切换时右下角短暂
 提示“中”/“EN”，不显示常驻中英图标。
 
