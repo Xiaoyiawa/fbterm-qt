@@ -128,6 +128,16 @@ COLORTERM=truecolor
 ./bin/fbterm-qt --font-size=40 --font-path=share/font.ttf
 ```
 
+字体优先级：
+
+1. `--font-path` 最高；可以写多次，第一个为主字体，后续为 fallback：
+   `--font-path=main.ttf --font-path=fallback.ttf`
+2. 没写 `--font-path`：按 `./font.ttf`、`./font.otf`、`./share/font.ttf`、
+   `./share/font.otf` 查找
+3. 都没有：Qt 默认字体
+
+输入法候选条、toast 都继承终端当前字体。
+
 - 字号默认 32，整数像素
 - 未指定时**只**找 `font.ttf` / `font.otf`：
   `./font.ttf`、`./font.otf`、`./share/font.ttf`、`./share/font.otf`、

@@ -62,8 +62,14 @@ apt-get install -y g++ qtbase5-dev qtbase5-dev-tools \
     libqtermwidget5-0-dev libutf8proc-dev
 ```
 
-默认字体只找 `share/font.ttf` 或 `share/font.otf`；把带中文的字体放进去，
-或者用 `--font-path` 指定。
+字体优先级：
+
+1. `--font-path` 指定的字体最高；可重复，第一个是主字体，后续是 fallback：
+   `--font-path=main.ttf --font-path=fallback.ttf`
+2. 没有指定时，找 `./font.ttf` / `./font.otf` / `./share/font.ttf` / `./share/font.otf`
+3. 都没有，使用 Qt 默认字体
+
+输入法候选条和“中/EN”toast 复用当前终端字体。
 
 ## 构建
 

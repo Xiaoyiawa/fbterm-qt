@@ -38,25 +38,27 @@ QStringList splitCommandLine(const QString& command)
     return out;
 }
 
-QString resolveFontPath(const QString& explicitPath)
+QStringList resolveFontPaths(const QStringList& explicitPaths)
 {
-    if (!explicitPath.isEmpty()) return explicitPath;
-    const QStringList candidates = {
-        // Only these two file names are considered. Use --font-path for
-        // anything else (including unifont.otf).
-        QStringLiteral("./font.ttf"),
-        QStringLiteral("./font.otf"),
-        QStringLiteral("./share/font.ttf"),
-        QStringLiteral("./share/font.otf"),
-        QStringLiteral("/root/fbterm-qt/share/font.ttf"),
-        QStringLiteral("/root/fbterm-qt/share/font.otf"),
-        QStringLiteral("/usr/local/share/fbterm-qt/font.ttf"),
-        QStringLiteral("/usr/local/share/fbterm-qt/font.otf"),
+    // Explicit --font-path arguments are the highest priority and keep their
+    // order: the first is the primary family, the rest are fallbacks.
+    if (!explicitPaths.isEmpty()) return explicitPaths;
+
+    // No explicit font: only font.ttf / font.otf are considered.
+    const QStringList bases = {
+        QStringLiteral("."),
+        QStringLiteral("./share"),
+        QStringLiteral("/root/fbterm-qt/share"),
+        QStringLiteral("/usr/local/share/fbterm-qt"),
     };
-    for (const QString& path : candidates) {
-        if (QFileInfo::exists(path)) return path;
+    QStringList out;
+    for (const QString& base : bases) {
+        for (const QString& name : {QStringLiteral("font.ttf"), QStringLiteral("font.otf")}) {
+            const QString path = base + QLatin1Char('/') + name;
+            if (QFileInfo::exists(path) && !out.contains(path)) out << path;
+        }
     }
-    return QString();
+    return out;
 }
 
 bool parseQtOptions(int argc, char** argv, QtOptions* out, QString* error)
@@ -77,7 +79,7 @@ bool parseQtOptions(int argc, char** argv, QtOptions* out, QString* error)
             if (i + 1 >= argc) { *error = name + " requires a value"; return false; }
             value = QString::fromLocal8Bit(argv[++i]);
         }
-        if (name == "--font-path") out->fontPath = value;
+        if (name == "--font-path") out->fontPaths.append(value);
         else if (name == "--font-size") {
             if (!parseInt(value, 8, 96, &out->fontSize)) {
                 *error = "--font-size must be 8..96"; return false;
@@ -98,7 +100,7 @@ void printQtUsage()
 {
     QTextStream(stdout)
         << "Usage: fbterm-qt [options]\n"
-        << "  --font-path=PATH      Unifont OTF path\n"
+        << "  --font-path=PATH      font file; repeat for fallback fonts\n"
         << "  --font-size=N         pixel size 8..96 (default 32)\n"
         << "  --shell=CMD           PTY program (default /bin/login)\n"
         << "  --scrollback=N        history lines (default 5000)\n"

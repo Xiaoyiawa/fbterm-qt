@@ -36,17 +36,17 @@ int main(int argc, char** argv)
     QApplication app(argc, argv);
     SignalBridge signalBridge;
 
-    const QString fontPath = resolveFontPath(options.fontPath);
-    QString family = QApplication::font().family();
-    if (!fontPath.isEmpty()) {
-        const int id = QFontDatabase::addApplicationFont(fontPath);
-        if (id >= 0) {
-            const QStringList families = QFontDatabase::applicationFontFamilies(id);
-            if (!families.isEmpty()) family = families.first();
+    const QStringList fontPaths = resolveFontPaths(options.fontPaths);
+    QStringList families;
+    for (const QString& path : fontPaths) {
+        const int id = QFontDatabase::addApplicationFont(path);
+        if (id < 0) continue;
+        for (const QString& family : QFontDatabase::applicationFontFamilies(id)) {
+            if (!families.contains(family)) families << family;
         }
     }
 
-    TerminalWindow window(options, family);
+    TerminalWindow window(options, families);
     window.showFullScreen();
     window.startShellProgram();
     QTimer::singleShot(0, &window, [&window]() { window.setFocus(); });

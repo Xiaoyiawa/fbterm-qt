@@ -11,11 +11,11 @@
 #include <QResizeEvent>
 #include <QTimer>
 
-TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFamily,
+TerminalWindow::TerminalWindow(const QtOptions& options, const QStringList& fontFamilies,
                                QWidget* parent)
     : QTermWidget(0, parent)
     , options_(options)
-    , fontFamily_(fontFamily)
+    , fontFamilies_(fontFamilies)
     , fontSize_(options.fontSize)
 {
     QStringList parts = splitCommandLine(options_.shell);
@@ -58,8 +58,6 @@ TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFami
     setCursor(Qt::BlankCursor);
     setWorkingDirectory(QStringLiteral("/root"));
 
-    applyFont();
-
     if (!options_.disableIme) ime_.init();
     imeLabel_ = new QLabel(this);
     imeLabel_->setAttribute(Qt::WA_TransparentForMouseEvents);
@@ -67,9 +65,6 @@ TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFami
     imeLabel_->setStyleSheet(
         "QLabel { background-color: #0C0C0C; color: #CCCCCC;"
         " border-top: 1px solid #3A96DD; padding: 4px 8px; }");
-    QFont imeFont = font();
-    imeFont.setPixelSize(22);
-    imeLabel_->setFont(imeFont);
     imeLabel_->hide();
 
     toastLabel_ = new QLabel(this);
@@ -77,10 +72,6 @@ TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFami
     toastLabel_->setStyleSheet(
         "QLabel { background-color: rgba(20,20,20,230); color: #CCCCCC;"
         " border: 1px solid #3A96DD; border-radius: 6px; padding: 5px 14px; }");
-    QFont toastFont = font();
-    toastFont.setPixelSize(28);
-    toastFont.setBold(true);
-    toastLabel_->setFont(toastFont);
     toastLabel_->hide();
 
     toastTimer_ = new QTimer(this);
@@ -88,20 +79,43 @@ TerminalWindow::TerminalWindow(const QtOptions& options, const QString& fontFami
     toastTimer_->setInterval(1200);
     connect(toastTimer_, &QTimer::timeout, toastLabel_, &QWidget::hide);
 
+    applyFont();
     connect(this, &QTermWidget::finished, this, &TerminalWindow::onFinished);
     qApp->installEventFilter(this);
 }
 
 void TerminalWindow::applyFont()
 {
-    QFont font(fontFamily_);
+    QFont font;
+    if (fontFamilies_.isEmpty()) {
+        font = QApplication::font();
+    } else {
+        font.setFamily(fontFamilies_.first());
+        if (fontFamilies_.size() > 1) {
+            // Qt 5.12 has no QFont::setFamilies(); register the explicit
+            // fallback order with the font database instead.
+            QFont::insertSubstitutions(fontFamilies_.first(), fontFamilies_.mid(1));
+        }
+    }
     font.setPixelSize(fontSize_);
     font.setFixedPitch(true);
     font.setStyleHint(QFont::TypeWriter);
     font.setStyleStrategy((fontSize_ % 16) == 0 ? QFont::NoAntialias
                                                 : QFont::PreferAntialias);
+    terminalFont_ = font;
     setTerminalFont(font);
-    update();
+
+    if (imeLabel_ != nullptr) {
+        QFont imeFont = terminalFont_;
+        imeFont.setPixelSize(22);
+        imeLabel_->setFont(imeFont);
+    }
+    if (toastLabel_ != nullptr) {
+        QFont toastFont = terminalFont_;
+        toastFont.setPixelSize(28);
+        toastFont.setBold(true);
+        toastLabel_->setFont(toastFont);
+    }
 }
 
 void TerminalWindow::setFontSize(int pixelSize)

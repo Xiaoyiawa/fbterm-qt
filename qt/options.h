@@ -5,7 +5,7 @@
 #include <QStringList>
 
 struct QtOptions {
-    QString fontPath;
+    QStringList fontPaths;
     int fontSize = 32;
     QString shell = "/bin/login";
     int scrollback = 5000;
@@ -17,7 +17,7 @@ struct QtOptions {
 
 bool parseQtOptions(int argc, char** argv, QtOptions* out, QString* error);
 QStringList splitCommandLine(const QString& command);
-QString resolveFontPath(const QString& explicitPath);
+QStringList resolveFontPaths(const QStringList& explicitPaths);
 void printQtUsage();
 
 #endif

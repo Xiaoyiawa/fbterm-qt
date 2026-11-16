@@ -11,7 +11,7 @@ class QTimer;
 class TerminalWindow : public QTermWidget {
     Q_OBJECT
 public:
-    TerminalWindow(const QtOptions& options, const QString& fontFamily,
+    TerminalWindow(const QtOptions& options, const QStringList& fontFamilies,
                    QWidget* parent = nullptr);
 
     void setFontSize(int pixelSize);
@@ -41,7 +41,8 @@ private:
     QLabel* imeLabel_ = nullptr;
     QLabel* toastLabel_ = nullptr;
     QTimer* toastTimer_ = nullptr;
-    QString fontFamily_;
+    QStringList fontFamilies_;
+    QFont terminalFont_;
     int fontSize_ = 32;
 };
 
