@@ -101,7 +101,7 @@ cd /root/fbterm-qt
 参数：
 
 ```text
---font-path=PATH      Unifont OTF 路径
+--font-path=PATH      字体文件；可重复，第一个主字体，后续 fallback
 --font-size=N         8..96，默认 32
 --shell=CMD           默认 /bin/login
 --scrollback=N        默认 5000
