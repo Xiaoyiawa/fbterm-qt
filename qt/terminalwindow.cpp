@@ -45,6 +45,7 @@ TerminalWindow::TerminalWindow(const QtOptions& options, const QStringList& font
     const QStringList schemes = {
         QStringLiteral("./share/color-schemes/Campbell.colorscheme"),
         QStringLiteral("/root/fbterm-qt/share/color-schemes/Campbell.colorscheme"),
+        QStringLiteral("/usr/share/fbterm-qt/color-schemes/Campbell.colorscheme"),
         QStringLiteral("/usr/share/qtermwidget5/color-schemes/Campbell.colorscheme"),
     };
     QString scheme;

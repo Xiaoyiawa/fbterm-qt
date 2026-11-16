@@ -49,6 +49,7 @@ QStringList resolveFontPaths(const QStringList& explicitPaths)
         QStringLiteral("."),
         QStringLiteral("./share"),
         QStringLiteral("/root/fbterm-qt/share"),
+        QStringLiteral("/usr/share/fbterm-qt"),
         QStringLiteral("/usr/local/share/fbterm-qt"),
     };
     QStringList out;

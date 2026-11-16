@@ -68,6 +68,7 @@ bool PinyinIme::init()
     const QStringList bases = {
         QStringLiteral("./share"),
         QStringLiteral("/root/fbterm-qt/share"),
+        QStringLiteral("/usr/share/fbterm-qt"),
         QStringLiteral("/usr/local/share/fbterm-qt"),
     };
     for (const QString& base : bases) {

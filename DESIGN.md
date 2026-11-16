@@ -107,8 +107,8 @@ QTermWidget 负责：
 
 `systemd/fbterm-qt.service`：
 
-- `WorkingDirectory=/root/fbterm-qt`
-- `ExecStart=/root/fbterm-qt/bin/fbterm-qt`
+- `WorkingDirectory=/usr/share/fbterm-qt`
+- `ExecStart=/usr/bin/fbterm-qt`
 - `Environment=QT_QPA_PLATFORM=linuxfb`
 - `Environment=QT_QPA_GENERIC_PLUGINS=none`（不加载 Qt 自带 evdev 插件）
 - `Environment=QT_QPA_ENABLE_TERMINAL_KEYBOARD=0`
@@ -119,14 +119,17 @@ QTermWidget 负责：
 
 `qt/signalbridge.*` 把 `SIGTERM/SIGINT/SIGHUP` 通过 pipe + `QSocketNotifier`
 转成 Qt 退出事件，保证 `ConsoleMode` 析构时恢复 `KDTEXT`。
-`scripts/install-service.sh` 负责安装 unit、禁用 getty@tty1、enable + start。
+`scripts/install-target.sh` 负责安装 unit、数据、keytab，并 enable + start。
 
 ## 5. 构建与部署
 
-- 目标机原生构建：`qt/build.sh`（qmake + make）
-- 依赖：`g++ qtbase5-dev qtbase5-dev-tools libqtermwidget5-0-dev`
-- 主机：`scripts/deploy.sh` 把 `qt/` 打包到设备并在设备上构建
-- 产物：`/root/fbterm-qt/bin/fbterm-qt`
+- 主机交叉编译（`~/x-tools/arm-unknown-linux-gnueabihf`）
+- `scripts/fetch-sysroot.sh`：从目标机取 arm Qt/QTermWidget 头文件和库，
+  并在目标机生成 moc
+- `scripts/cross-build.sh`：主机 g++ 交叉编译
+- `scripts/install-target.sh`：安装到 `/usr/bin`、`/usr/share/fbterm-qt`、
+  `/usr/lib/systemd/system`
+- 不做目标机原生编译
 
 ## 5. 目录
 

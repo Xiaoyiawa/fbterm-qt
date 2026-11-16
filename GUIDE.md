@@ -35,8 +35,7 @@ journalctl -u fbterm-qt.service -f
 ### 1.2 手动运行
 
 ```sh
-cd /root/fbterm-qt
-./bin/fbterm-qt
+/usr/bin/fbterm-qt
 ```
 
 常用参数：
@@ -104,7 +103,7 @@ share/dictionary.data
 systemctl edit fbterm-qt.service
 # [Service]
 # ExecStart=
-# ExecStart=/root/fbterm-qt/bin/fbterm-qt --disable-ime
+# ExecStart=/usr/bin/fbterm-qt --disable-ime
 ```
 
 ### 1.5 终端环境
@@ -141,7 +140,7 @@ COLORTERM=truecolor
 - 字号默认 32，整数像素
 - 未指定时**只**找 `font.ttf` / `font.otf`：
   `./font.ttf`、`./font.otf`、`./share/font.ttf`、`./share/font.otf`、
-  `/root/fbterm-qt/share/font.ttf`、`/root/fbterm-qt/share/font.otf`
+  `/usr/share/fbterm-qt/font.ttf`、`/usr/share/fbterm-qt/font.otf`
 - 两个都没有就使用 Qt 默认字体；要加载 `unifont.otf` 或其它字体，必须显式
   `--font-path=...`
 - Unifont 是 dual-width（半角 8/16px，全角 16/32px），QTermWidget 会提示
@@ -232,7 +231,7 @@ systemd 里禁用 `getty@tty1`，否则会抢 VT。不要同时保留两个 fram
 
 - 引擎源码在 `qt/vendor/pinyinime/`，已编进主程序，不需要额外 `.so`
 - 数据路径：`./share/pinyin.txt`、`./share/dictionary.data`；
-  安装目录 `/root/fbterm-qt/share/`
+  安装目录 `/usr/share/fbterm-qt/`
 - 换词库：替换这两个文件后重启服务
 - 选词后库通过 `pinyin_ime_get_segments()` 保留剩余音节；例如选“真”后
   候选条显示 `de'ma`，继续选即可，不会重置已选结果
@@ -293,16 +292,15 @@ apt-get install -y g++ qtbase5-dev qtbase5-dev-tools \
 先自检：
 
 ```sh
-cd /root/fbterm-qt
-./bin/fbterm-qt --help
+/usr/bin/fbterm-qt --help
 ```
 
 ### 3.3 修改路径
 
-搜索所有 `fbterm-qt` / `/root/fbterm-qt`：
+搜索所有 `fbterm-qt` / `/usr/share/fbterm-qt`：
 
 ```sh
-grep -RIn "fbterm-qt\|/root/fbterm-qt" \
+grep -RIn "fbterm-qt\|/usr/share/fbterm-qt" \
     qt systemd scripts README.md GUIDE.md
 ```
 
@@ -314,26 +312,26 @@ grep -RIn "fbterm-qt\|/root/fbterm-qt" \
 - `scripts/deploy.sh`：`DEPLOY_DIR`
 - `README.md` / `GUIDE.md`：示例路径
 
-### 3.4 构建
+### 3.4 构建（交叉编译）
 
-目标机原生（推荐，Qt 版本不必交叉）：
+主机使用 `~/x-tools/arm-unknown-linux-gnueabihf`，不做目标机原生编译。
 
 ```sh
-cd /root/fbterm-qt/qt
-./build.sh
+./scripts/fetch-sysroot.sh    # 第一次：arm Qt/QTermWidget 头文件/库 + 目标机 moc
+./scripts/cross-build.sh      # 主机交叉编译 -> build/cross/fbterm-qt
+./scripts/install-target.sh   # 安装到目标 /usr
 ```
 
-`build.sh` 会：
+`fetch-sysroot.sh` 会把目标机的 Qt 头文件和 arm 库拉到 `build/sysroot`，
+并在目标机 `/tmp` 解一份源码生成 moc；`cross-build.sh` 不需要目标机参与。
 
-1. `qmake fbterm-qt.pro`
-2. `make -j4`
-3. 复制到 `../bin/fbterm-qt`
-4. 安装 keytab 到 `/usr/share/qtermwidget5/kb-layouts/`
+安装位置：
 
-主机部署：
-
-```sh
-DEPLOY_HOST=root@192.168.1.15 DEPLOY_DIR=/root/fbterm-qt ./scripts/deploy.sh
+```text
+/usr/bin/fbterm-qt
+/usr/share/fbterm-qt/{pinyin.txt,dictionary.data,font.ttf,color-schemes/}
+/usr/lib/systemd/system/fbterm-qt.service
+/usr/share/qtermwidget5/kb-layouts/fbterm-qt.keytab
 ```
 
 ### 3.5 不同架构 / 发行版
@@ -350,7 +348,7 @@ DEPLOY_HOST=root@192.168.1.15 DEPLOY_DIR=/root/fbterm-qt ./scripts/deploy.sh
 
 ```sh
 systemctl is-active fbterm-qt.service        # active
-ls /root/fbterm-qt/bin/fbterm-qt             # 可执行
+ls /usr/bin/fbterm-qt                        # 可执行
 echo $TERM                                  # xterm-256color
 tput colors                                 # 256
 ```
@@ -378,7 +376,7 @@ tput colors                                 # 256
 | exit 白屏 | 当前版本 `finished()` 直接 `quit()`，不再 `clear()`/重开 login |
 | TERM 不对 | `systemctl show -p Environment fbterm-qt`；`qt/terminalwindow.cpp` 的 `setEnvironment` |
 | 配色不对 | `share/color-schemes/Campbell.colorscheme` 是否被覆盖；`setColorScheme` 路径 |
-| 服务起不来 | `journalctl -u fbterm-qt -n 100`；`/dev/fb0`、Qt linuxfb 插件、`/root/fbterm-qt` 权限 |
+| 服务起不来 | `journalctl -u fbterm-qt -n 100`；`/dev/fb0`、Qt linuxfb 插件、`/usr/share/fbterm-qt` 权限 |
 
 ---
 
@@ -397,7 +395,6 @@ qt/
 └── fbterm-qt.pro
 
 systemd/fbterm-qt.service
-scripts/install-service.sh
 scripts/deploy.sh
 share/color-schemes/Campbell.colorscheme
 share/keytab/fbterm-qt.keytab

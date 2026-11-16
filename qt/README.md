@@ -1,7 +1,7 @@
 # fbterm-qt
 
 Qt 5 / QTermWidget 版终端，使用 Qt 的 `linuxfb` 平台插件直接输出 `/dev/fb0`。
-在目标机上原生编译（Qt 5.12.8 armhf）。
+主机交叉编译（Qt 5.12.8 armhf 目标）。
 
 ## 依赖
 
@@ -12,18 +12,20 @@ apt-get install -y g++ qtbase5-dev qtbase5-dev-tools \
 
 ## 构建
 
+交叉编译，不在目标机原生编译：
+
 ```sh
-cd qt
-./build.sh
+./scripts/fetch-sysroot.sh   # 首次：取 arm Qt/QTermWidget + 目标机 moc
+./scripts/cross-build.sh
+./scripts/install-target.sh
 ```
 
-产物：`../bin/fbterm-qt`。
+产物安装到 `/usr/bin/fbterm-qt`、`/usr/share/fbterm-qt/`。
 
 ## 运行
 
 ```sh
-cd /root/fbterm-qt
-./bin/fbterm-qt
+/usr/bin/fbterm-qt
 ```
 
 参数：
@@ -53,13 +55,11 @@ cd /root/fbterm-qt
 仓库根目录的 systemd unit 和安装脚本：
 
 ```sh
-cd /root/fbterm-qt
-./scripts/install-service.sh
 systemctl status fbterm-qt.service
 journalctl -u fbterm-qt.service -f
 ```
 
-`install-service.sh` 会禁用 `getty@tty1`，避免和 framebuffer 终端抢 VT。
+安装时 `install-target.sh` 会把 unit 放到 `/usr/lib/systemd/system`，并禁用 `getty@tty1`。
 `Ctrl+Alt+Q` 正常退出后服务不自动重启（`Restart=on-failure`）。
 
 ## 输入热插拔

@@ -45,7 +45,7 @@
 │   ├── pinyin.txt            拼音表
 │   └── dictionary.data       词典
 ├── systemd/fbterm-qt.service
-├── scripts/                  deploy.sh / install-service.sh
+├── scripts/                  fetch-sysroot / cross-build / install-target / deploy
 ├── tools/                    fb_probe / uinput_type / fb_ffmpeg_bridge
 ├── docs/                     实机截图
 ├── GUIDE.md                  使用、调优、移植
@@ -72,28 +72,43 @@ apt-get install -y g++ qtbase5-dev qtbase5-dev-tools \
 
 输入法候选条和“中/EN”toast 复用当前终端字体。
 
-## 构建
+## 构建（交叉编译）
 
-在目标机上原生构建：
-
-```sh
-cd /root/fbterm-qt/qt
-./build.sh
-```
-
-产物：`../bin/fbterm-qt`。
-
-从主机部署并构建：
+主机上需要 `~/x-tools/arm-unknown-linux-gnueabihf`，目标机需开启 SSH。
+第一次先取目标机的 arm Qt/QTermWidget 头文件和库，并在目标机上生成 moc：
 
 ```sh
-./scripts/deploy.sh
+./scripts/fetch-sysroot.sh
 ```
+
+然后交叉编译并安装到目标 `/usr`：
+
+```sh
+./scripts/cross-build.sh
+./scripts/install-target.sh
+```
+
+或者一条命令：
+
+```sh
+make install
+```
+
+安装位置：
+
+```text
+/usr/bin/fbterm-qt
+/usr/share/fbterm-qt/{pinyin.txt,dictionary.data,font.ttf,color-schemes/}
+/usr/lib/systemd/system/fbterm-qt.service
+/usr/share/qtermwidget5/kb-layouts/fbterm-qt.keytab
+```
+
+不再在设备上原生 `qmake/make`。
 
 ## 运行
 
 ```sh
-cd /root/fbterm-qt
-./bin/fbterm-qt
+/usr/bin/fbterm-qt
 ```
 
 参数：

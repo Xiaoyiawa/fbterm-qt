@@ -1,51 +1,24 @@
-# fbterm-qt — Qt5 / QTermWidget version
+# fbterm-qt — cross-compiled Qt5/QTermWidget terminal
 #
-# The Qt application is built natively on the target because Qt/qtermwidget
-# dev packages are installed there. The host cross compiler is only used for
-# the small evdev/framebuffer test tools.
+# The target's Qt/qtermwidget headers and arm libraries are copied into
+# build/sysroot; moc is generated on the target. Nothing is compiled natively.
 
-TOOL            := fbterm-qt
-CROSS_COMPILE   ?= $(HOME)/x-tools/arm-unknown-linux-gnueabihf/bin/arm-unknown-linux-gnueabihf-
-CC              := $(CROSS_COMPILE)gcc
-ARCHFLAGS       ?= -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
-OPT             ?= -O2 -g
-BUILD           := build
+TOOL := fbterm-qt
 
-.PHONY: all qt qt-clean probe uinput deploy install-service clean distclean
+.PHONY: all sysroot cross install clean distclean
 
-all: probe uinput
-	@echo "Qt app: build on the target with 'cd qt && ./build.sh'"
-	@echo "or from here: make qt (if qmake is available)"
+all: cross
 
-qt:
-	@if command -v qmake >/dev/null 2>&1; then \
-		cd qt && ./build.sh; \
-	else \
-		echo "qmake not found on this host."; \
-		echo "On the target: cd /root/fbterm-qt/qt && ./build.sh"; \
-	fi
+sysroot:
+	./scripts/fetch-sysroot.sh
 
-qt-clean:
-	cd qt && rm -f *.o moc_* Makefile .qmake.stash fbterm-qt
+cross:
+	./scripts/cross-build.sh
 
-$(BUILD)/fb_probe: tools/fb_probe.c
-	@mkdir -p $(@D)
-	$(CC) $(OPT) $(ARCHFLAGS) -std=gnu11 -Wall -Wextra -o $@ $<
+install: cross
+	./scripts/install-target.sh
 
-$(BUILD)/uinput_type: tools/uinput_type.c
-	@mkdir -p $(@D)
-	$(CC) $(OPT) $(ARCHFLAGS) -std=gnu11 -Wall -Wextra -o $@ $<
-
-probe: $(BUILD)/fb_probe
-uinput: $(BUILD)/uinput_type
-
-deploy:
-	./scripts/deploy.sh
-
-install-service:
-	./scripts/install-service.sh
-
-clean: qt-clean
-	rm -rf $(BUILD)
+clean:
+	rm -rf build
 
 distclean: clean
