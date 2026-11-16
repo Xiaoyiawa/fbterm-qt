@@ -1,9 +1,11 @@
+# 纯Vibe Coding警告！
+特别鸣谢:Deepseek v4.1 flash
+
 # fbterm-qt
 
-在 Linux 帧缓冲 `/dev/fb0` 上运行的本地伪终端。<br>
+一个可以在 Linux 帧缓冲 `/dev/fb0` 上运行的本地伪终端。<br>
 其实只是为自己的机顶盒写的<br>
 因为我不想每次都要ssh进去才能操作...
-纯vibe coding，勿喷QAQ
 
 基于 **Qt 5 + QTermWidget**，使用 Qt 的 `linuxfb` 平台插件直接输出到帧缓冲设备
 
